@@ -1,0 +1,1608 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta property="og:title" content="Cumhuriyet Yolu · 29 Ekim 103. Yıl">
+<meta property="og:description" content="1923'ten 2026'ya yıldızları topla, şehri büyüt, 29 Ekim kutlama kartını paylaş.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Cumhuriyet Yolu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="29 Ekim Cumhuriyet Bayramı'nın 103. yılı için mobil oyun: 1923'ten 2026'ya yıldızları topla, şehri büyüt, kutlama kartını paylaş.">
+<meta name="theme-color" content="#0b0d24">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Cormorant+Garamond:ital,wght@1,500;1,600&family=DM+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one full-bleed night panorama (sky → city → Anıtkabir hill → fener alayı ridge) that grows with the years;
+   HUD pinned to the top edge; start / pause / result / card screens are poster sheets laid over the live scene. */
+:root{
+  --night:#0b0d24;
+  --night-2:#1c0c24;
+  --dusk:#3a0f22;
+  --flag:#e30a17;
+  --flag-deep:#99000f;
+  --paper:#fff8ee;
+  --gold:#f3c34f;
+  --ember:#ffad4d;
+  --mist:#bcb4cf;
+  --line:rgba(255,248,238,.16);
+  --f-display:"Big Shoulders Display","Arial Narrow","Roboto Condensed",Impact,sans-serif;
+  --f-body:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-quote:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  color-scheme:dark;
+}
+html{box-sizing:border-box;height:100%;background:var(--night)}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;background:var(--night);color:var(--paper);font-family:var(--f-body);font-size:15px;line-height:1.5;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+#app{position:relative;height:100%;overflow:hidden;-webkit-user-select:none;user-select:none}
+#game{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+
+/* ---------- HUD ---------- */
+.hud{position:absolute;inset:0 0 auto;z-index:3;display:grid;grid-template-columns:44px minmax(0,1fr) 88px;align-items:start;gap:8px;
+  padding-top:8px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));pointer-events:none}
+.hud button{pointer-events:auto}
+.year{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
+.year b{display:block;font:900 42px/.9 var(--f-display);letter-spacing:.02em;font-variant-numeric:tabular-nums;text-shadow:0 2px 16px rgba(243,195,79,.35)}
+.year b.bump{animation:bump .3s ease-out}
+@keyframes bump{0%{transform:scale(1.16);color:var(--gold)}100%{transform:scale(1)}}
+.timeline{position:relative;width:min(100%,300px);height:5px;border-radius:3px;background:rgba(255,248,238,.16)}
+.timeline i{position:absolute;inset:0 auto 0 0;width:0;border-radius:3px;background:linear-gradient(90deg,var(--flag),var(--gold));transition:width .25s ease-out}
+.timeline s{position:absolute;top:-3px;width:2px;height:11px;margin-left:-1px;background:rgba(255,248,238,.32);text-decoration:none}
+.timeline s.done{background:rgba(255,248,238,.7)}
+.timeline s.got{background:var(--gold);box-shadow:0 0 6px rgba(243,195,79,.8)}
+.ends{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;width:min(100%,300px);min-height:18px;font:500 11px/1 var(--f-body);letter-spacing:.08em;color:var(--mist);font-variant-numeric:tabular-nums}
+.ends span:last-child{text-align:right}
+.streak{font:800 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--night);background:var(--gold);padding:3px 7px 2px;border-radius:3px}
+.side{display:flex;flex-direction:column;align-items:flex-end;gap:7px;padding-top:6px}
+.lives{display:flex;gap:3px}
+.lives svg{width:26px;height:13px;fill:var(--paper);transition:opacity .25s,transform .25s}
+.lives svg.lost{opacity:.15;transform:scale(.8)}
+.powers{display:flex;gap:6px}
+.pow{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--c,var(--gold)) calc(var(--p,1)*360deg),rgba(255,248,238,.14) 0)}
+.pow span{width:22px;height:22px;border-radius:50%;background:var(--night);display:grid;place-items:center}
+.pow svg{width:15px;height:15px}
+.icon-btn{display:grid;place-items:center;width:42px;height:42px;flex:none;border-radius:50%;border:1px solid rgba(255,248,238,.24);background:rgba(11,13,36,.55);color:var(--paper);cursor:pointer;touch-action:manipulation}
+.icon-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.icon-btn .x{display:none}
+.icon-btn.muted .waves{display:none}
+.icon-btn.muted .x{display:inline}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* ---------- toast + hint ---------- */
+.toast{position:absolute;z-index:4;left:50%;top:116px;transform:translateX(-50%);width:min(calc(100% - 32px),380px);display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;
+  padding:10px 14px;border-radius:6px;background:rgba(11,13,36,.88);border:1px solid rgba(243,195,79,.42);box-shadow:0 10px 30px rgba(0,0,0,.35);pointer-events:none}
+.toast b{font:900 34px/1 var(--f-display);color:var(--gold);font-variant-numeric:tabular-nums}
+.toast span{font-size:14px;line-height:1.35}
+.toast.in{animation:toastIn .35s ease-out}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+.hint{position:absolute;z-index:3;left:50%;bottom:calc(max(84px,14%) + 64px);transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:8px 16px;border-radius:999px;
+  background:rgba(11,13,36,.72);border:1px solid var(--line);font:600 14px/1.2 var(--f-body);white-space:nowrap;pointer-events:none}
+.hint i{font-style:normal;color:var(--gold);display:inline-block;animation:nudgeL .8s ease-in-out infinite alternate}
+.hint i+span+i{animation-name:nudgeR}
+@keyframes nudgeL{from{transform:translateX(0)}to{transform:translateX(-5px)}}
+@keyframes nudgeR{from{transform:translateX(0)}to{transform:translateX(5px)}}
+
+/* ---------- sheets ---------- */
+.sheet{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  padding-block:20px 24px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));
+  background:linear-gradient(180deg,rgba(11,13,36,.9) 0%,rgba(11,13,36,.7) 50%,rgba(11,13,36,.18) 80%,rgba(11,13,36,0) 100%)}
+.sheet.bottom{background:linear-gradient(0deg,rgba(11,13,36,.94) 0%,rgba(11,13,36,.78) 42%,rgba(11,13,36,0) 72%)}
+.sheet.solid{background:rgba(9,10,28,.93);padding-bottom:0}
+.panel{width:100%;max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.sheet.start .panel{margin-top:max(2vh,4px);margin-bottom:auto}
+.sheet.center .panel{margin-block:auto}
+.sheet.bottom .panel{margin-top:auto}
+.eyebrow{margin:0;font:700 12px/1.3 var(--f-body);letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+h1,h2{margin:0;font-family:var(--f-display);font-weight:900;text-transform:uppercase;text-wrap:balance;line-height:.84;letter-spacing:.005em}
+h1{font-size:clamp(60px,19vw,124px)}
+h1 span{display:block}
+h1 span+span{color:var(--gold)}
+h2{font-size:clamp(40px,12vw,68px)}
+.nofont h1{font-size:clamp(40px,12vw,96px)}
+.nofont h2{font-size:clamp(32px,9.5vw,56px)}
+.poster{position:relative;isolation:isolate;display:flex;flex-direction:column;gap:10px;padding-top:4px}
+.ghost-num{position:absolute;z-index:-1;right:-.05em;top:-.12em;font:900 clamp(150px,52vw,280px)/.8 var(--f-display);color:transparent;-webkit-text-stroke:1.5px rgba(243,195,79,.32);pointer-events:none;font-variant-numeric:tabular-nums}
+.nofont .ghost-num{font-size:clamp(100px,34vw,210px)}
+.tag{margin:0;font:italic 500 20px/1.25 var(--f-quote);color:var(--mist)}
+.lede{margin:0;font-size:15.5px;line-height:1.55;max-width:34em}
+.muted{margin:0;color:var(--mist);font-size:13.5px;line-height:1.45}
+.big-year{margin:0;font:900 clamp(92px,30vw,160px)/.8 var(--f-display);font-variant-numeric:tabular-nums;color:var(--gold)}
+
+.legend{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.legend li{display:flex;flex-direction:column;gap:5px;padding:9px 9px 8px;border-radius:6px;background:rgba(255,248,238,.045);border:1px solid var(--line);font-size:12px;line-height:1.25;min-width:0}
+.legend svg{width:24px;height:24px}
+.legend b{display:block;font:800 15px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--paper)}
+.legend li.bad b{color:#ff9aa0}
+.legend span{color:var(--mist)}
+
+.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.actions.col{flex-direction:column;align-items:stretch}
+.btn{appearance:none;border:0;cursor:pointer;touch-action:manipulation;font:800 22px/1 var(--f-display);letter-spacing:.09em;text-transform:uppercase;
+  padding:16px 26px 15px;border-radius:4px;background:var(--flag);color:var(--paper);box-shadow:0 5px 0 var(--flag-deep),0 12px 28px rgba(227,10,23,.32);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--flag-deep),0 6px 16px rgba(227,10,23,.3)}
+.btn.big{font-size:25px;padding:19px 36px 18px}
+.btn.ghost{background:transparent;box-shadow:none;border:1.5px solid rgba(255,248,238,.4);padding:14px 20px 13px;font-size:19px}
+.btn.ghost:active{transform:translateY(1px)}
+.btn.grow{flex:1 1 auto}
+.link-btn{appearance:none;background:none;border:0;padding:6px 0;color:var(--mist);font:500 14px/1.3 var(--f-body);text-decoration:underline;text-underline-offset:3px;cursor:pointer;text-align:left}
+.foot{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;margin:0;color:var(--mist);font-size:13.5px}
+
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0}
+.stats div{display:flex;flex-direction:column;gap:4px;padding-top:9px;border-top:1px solid var(--line);min-width:0}
+.stats dt{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mist)}
+.stats dd{margin:0;font:900 30px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.album{display:flex;flex-wrap:wrap;gap:6px}
+.album button{appearance:none;cursor:pointer;font:700 13px/1 var(--f-body);font-variant-numeric:tabular-nums;padding:7px 9px;border-radius:999px;border:1px solid rgba(243,195,79,.45);background:transparent;color:var(--mist)}
+.album button.got{background:var(--gold);border-color:var(--gold);color:#3a0006}
+.album button[aria-pressed=true]{outline:2px solid var(--paper);outline-offset:2px}
+.album-note{margin:0;min-height:2.9em;font-size:14px;line-height:1.4}
+.album-note b{color:var(--gold);font:800 16px/1 var(--f-display);letter-spacing:.04em;margin-right:6px}
+
+/* ---------- card view ---------- */
+.card-wrap{width:100%;max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.preview{position:relative;height:min(60vh,calc((100vw - 40px) * var(--hr,1.25)),760px);aspect-ratio:var(--ar,1080 / 1350);max-width:100%;margin:0 auto;flex:none;
+  border-radius:8px;background:rgba(255,248,238,.05);box-shadow:0 22px 56px rgba(0,0,0,.55);overflow:hidden}
+.preview img{display:block;width:100%;height:100%;object-fit:contain;-webkit-user-select:auto;user-select:auto;-webkit-touch-callout:default}
+.preview p{position:absolute;inset:0;display:grid;place-items:center;margin:0;color:var(--mist);font-size:14px}
+.controls{display:flex;flex-direction:column;gap:16px;min-width:0}
+.field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.field>.label{font:700 11.5px/1.2 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--mist)}
+.seg{display:flex;gap:6px}
+.seg button{appearance:none;flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 8px;border-radius:5px;border:1px solid var(--line);
+  background:rgba(255,248,238,.04);font:600 14px/1.2 var(--f-body);cursor:pointer;touch-action:manipulation}
+.seg button[aria-pressed=true]{border-color:var(--gold);background:rgba(243,195,79,.14);color:var(--gold)}
+.seg .shape{display:inline-block;border:1.5px solid currentColor;border-radius:2px}
+.seg .dot{width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(255,248,238,.6)}
+.quotes{display:flex;flex-direction:column;gap:6px}
+.quotes button{appearance:none;text-align:left;cursor:pointer;padding:10px 12px;border-radius:5px;border:1px solid var(--line);background:rgba(255,248,238,.04);touch-action:manipulation}
+.quotes button q{display:block;font:italic 500 18px/1.25 var(--f-quote);quotes:"“" "”"}
+.quotes button small{display:block;margin-top:3px;font:500 11.5px/1.2 var(--f-body);letter-spacing:.06em;color:var(--mist)}
+.quotes button[aria-pressed=true]{border-color:var(--gold);background:rgba(243,195,79,.12)}
+.quotes button[aria-pressed=true] q{color:var(--gold)}
+.field input[type=text]{font:500 16px/1.2 var(--f-body);color:var(--paper);background:rgba(255,248,238,.06);border:1px solid rgba(255,248,238,.28);border-radius:4px;padding:12px;width:100%;-webkit-user-select:text;user-select:text}
+.photo-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.file-btn{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font:700 14px/1 var(--f-body);padding:11px 14px;border-radius:4px;border:1px dashed rgba(243,195,79,.6);color:var(--gold)}
+.file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.file-btn:focus-within{outline:2px solid var(--gold);outline-offset:2px}
+.card-actions{position:sticky;bottom:0;z-index:2;display:flex;flex-direction:column;gap:8px;margin-top:4px;padding-block:14px 18px;background:linear-gradient(0deg,rgba(9,10,28,1) 72%,rgba(9,10,28,0))}
+.status{min-height:1.4em;margin:0;font-size:13.5px;color:var(--gold)}
+@media (min-width:780px){
+  .panel{max-width:460px}
+  .card-wrap{max-width:940px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:32px}
+  .preview{position:sticky;top:0;height:min(80vh,780px)}
+}
+@media (max-width:360px){
+  .legend{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion:reduce){
+  .toast.in,.year b.bump,.hint i{animation:none}
+  .timeline i{transition:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="game" aria-label="Oyun alanı: hilali sağa sola kaydırarak yıldızları yakala"></canvas>
+
+  <header class="hud" id="hud" hidden>
+    <button class="icon-btn" id="pauseBtn" type="button" aria-label="Duraklat">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>
+    </button>
+    <div class="year">
+      <b id="yearNow">1923</b>
+      <div class="timeline" id="timeline"><i id="timeFill"></i></div>
+      <div class="ends"><span>1923</span><span class="streak" id="streak" style="visibility:hidden">Seri ×3</span><span>2026</span></div>
+    </div>
+    <div class="side">
+      <div class="lives" id="lives" role="img" aria-label="3 can"></div>
+      <div class="powers">
+        <div class="pow" id="powMagnet" hidden title="Fener: yıldızları çekiyor"><span><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="13" rx="6.5" ry="7" fill="#ffad4d"/><rect x="8.5" y="4" width="7" height="2.4" fill="#5a2a12"/><rect x="8.5" y="19.6" width="7" height="2.4" fill="#5a2a12"/></svg></span></div>
+        <div class="pow" id="powShield" hidden title="Bayrak kalkanı hazır" style="--c:var(--flag)"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="1" fill="#e30a17"/><circle cx="10" cy="12" r="3.2" fill="#fff8ee"/><circle cx="10.8" cy="12" r="2.6" fill="#e30a17"/><circle cx="15" cy="12" r="1.3" fill="#fff8ee"/></svg></span></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="toast" id="toast" hidden role="status"><b id="toastYear">1923</b><span id="toastText"></span></div>
+  <div class="hint" id="hint" hidden><i aria-hidden="true">‹</i><span>Parmağını sağa sola kaydır</span><i aria-hidden="true">›</i></div>
+
+  <!-- start -->
+  <section class="sheet start" id="startSheet" aria-labelledby="startTitle">
+    <div class="panel">
+      <div class="poster">
+        <span class="ghost-num" aria-hidden="true">103</span>
+        <p class="eyebrow">29 Ekim 1923 → 29 Ekim 2026</p>
+        <h1 id="startTitle"><span>Cumhuriyet</span><span>Yolu</span></h1>
+        <p class="tag">Cumhuriyet'in 103 yılına bir yolculuk</p>
+      </div>
+      <p class="lede">Hilali kaydır, gökten düşen yıldızları yakala. Her yıldız bir yıl: şehir büyür, fener alayı uzar. 2026'ya varınca gökte ay yıldız belirir ve kutlama kartın açılır.</p>
+      <ul class="legend">
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><polygon fill="#fff8ee" points="12,3 14.02,9.22 20.56,9.22 15.27,13.06 17.29,19.28 12,15.44 6.71,19.28 8.73,13.06 3.44,9.22 9.98,9.22"/></svg><b>Yıldız</b><span>+1 yıl</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><polygon fill="#f3c34f" points="12,3 14.02,9.22 20.56,9.22 15.27,13.06 17.29,19.28 12,15.44 6.71,19.28 8.73,13.06 3.44,9.22 9.98,9.22"/></svg><b>Altın</b><span>+3 yıl</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#f3c34f"/><circle cx="12" cy="12" r="7.4" fill="none" stroke="#99000f" stroke-width="1.3"/><text x="12" y="14.5" text-anchor="middle" font-size="6.6" font-weight="700" font-family="DM Sans, sans-serif" fill="#99000f">1928</text></svg><b>Madalyon</b><span>+5 ve tarih notu</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5v2.5" stroke="#8a6a50" stroke-width="1.2"/><ellipse cx="12" cy="13" rx="7" ry="8" fill="#ffad4d"/><ellipse cx="12" cy="13" rx="3.4" ry="8" fill="none" stroke="#c4501a" stroke-width=".9"/><rect x="8" y="4.2" width="8" height="2.4" fill="#5a2a12"/><rect x="8" y="19.6" width="8" height="2.4" fill="#5a2a12"/></svg><b>Fener</b><span>Yıldızları çeker</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3" width="1.4" height="19" fill="#d9d2e6"/><rect x="5" y="4" width="16" height="11" fill="#e30a17"/><circle cx="11" cy="9.5" r="3" fill="#fff8ee"/><circle cx="11.75" cy="9.5" r="2.4" fill="#e30a17"/><circle cx="15.4" cy="9.5" r="1.2" fill="#fff8ee"/></svg><b>Bayrak</b><span>1 bulutu savar</span></li>
+        <li class="bad"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#f3c34f" d="M12.6 15.2 10.4 19h1.7l-1 3.4 3.2-4.6h-1.8l1.3-2.6z"/><path fill="#4b4867" d="M6.5 17.5a4 4 0 0 1-.6-7.96A6 6 0 0 1 17.4 8.2a4.7 4.7 0 0 1 .1 9.3z"/></svg><b>Bulut</b><span>1 can gider</span></li>
+      </ul>
+      <div class="actions">
+        <button class="btn big" id="startBtn" type="button">Yola çık</button>
+        <button class="icon-btn sound-btn" id="soundBtn" type="button" aria-label="Sesi kapat">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="waves" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+        </button>
+      </div>
+      <p class="foot"><span id="bestLine" hidden></span><button class="link-btn" id="directCardBtn" type="button">Doğrudan kutlama kartına git</button></p>
+    </div>
+  </section>
+
+  <!-- pause -->
+  <section class="sheet center" id="pauseSheet" hidden aria-labelledby="pauseTitle">
+    <div class="panel">
+      <p class="eyebrow">Mola</p>
+      <h2 id="pauseTitle">Duraklatıldı</h2>
+      <div class="actions col">
+        <button class="btn" id="resumeBtn" type="button">Devam et</button>
+        <button class="btn ghost" id="restartBtn" type="button">Baştan başla</button>
+        <button class="btn ghost" id="homeBtn" type="button">Ana ekran</button>
+      </div>
+      <div class="actions"><button class="icon-btn sound-btn" id="soundBtn2" type="button" aria-label="Sesi kapat">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="waves" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+      </button><span class="muted" id="soundLabel">Ses açık</span></div>
+    </div>
+  </section>
+
+  <!-- game over -->
+  <section class="sheet center" id="overSheet" hidden aria-labelledby="overTitle">
+    <div class="panel">
+      <p class="eyebrow">Yolculuk durdu</p>
+      <p class="big-year" id="overYear">1923</p>
+      <h2 id="overTitle">Kara bulutlar bu turu aldı</h2>
+      <p class="lede" id="overText"></p>
+      <dl class="stats" id="overStats"></dl>
+      <div class="album" id="overAlbum" aria-label="Devrim madalyonları"></div>
+      <p class="album-note" id="overNote"></p>
+      <div class="actions">
+        <button class="btn" id="retryBtn" type="button">Tekrar dene</button>
+        <button class="btn ghost" id="overCardBtn" type="button">Kartıma geç</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- win -->
+  <section class="sheet bottom" id="winSheet" hidden aria-labelledby="winTitle">
+    <div class="panel">
+      <p class="eyebrow">1923 → 2026</p>
+      <h2 id="winTitle">Cumhuriyet 103 yaşında!</h2>
+      <p class="lede">103 yılı tek tek topladın. Cumhuriyet Bayramın kutlu olsun.</p>
+      <dl class="stats" id="winStats"></dl>
+      <div class="album" id="winAlbum" aria-label="Devrim madalyonları"></div>
+      <p class="album-note" id="winNote"></p>
+      <div class="actions">
+        <button class="btn grow" id="openCardBtn" type="button">Kutlama kartını aç</button>
+        <button class="btn ghost" id="winReplayBtn" type="button">Yeniden oyna</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- card -->
+  <section class="sheet solid" id="cardSheet" hidden aria-labelledby="cardTitle">
+    <div class="card-wrap">
+      <div class="preview" id="preview"><p id="previewWait">Kart hazırlanıyor…</p><img id="cardImg" alt="29 Ekim Cumhuriyet Bayramı kutlama kartı" hidden></div>
+      <div class="controls" id="cardControls">
+        <div>
+          <p class="eyebrow">Kutlama kartın</p>
+          <h2 id="cardTitle" style="margin-top:8px">29 Ekim'i kutla</h2>
+        </div>
+        <div class="field">
+          <span class="label">Boyut</span>
+          <div class="seg">
+            <button type="button" data-opt="format" data-v="post" aria-pressed="true"><span class="shape" style="width:12px;height:15px"></span>Gönderi 4:5</button>
+            <button type="button" data-opt="format" data-v="story" aria-pressed="false"><span class="shape" style="width:9px;height:16px"></span>Hikâye 9:16</button>
+          </div>
+        </div>
+        <div class="field">
+          <span class="label">Tema</span>
+          <div class="seg">
+            <button type="button" data-opt="theme" data-v="bayrak" aria-pressed="true"><span class="dot" style="background:#e30a17"></span>Bayrak</button>
+            <button type="button" data-opt="theme" data-v="gece" aria-pressed="false"><span class="dot" style="background:linear-gradient(#0b0d24,#3a0f22)"></span>Fener gecesi</button>
+          </div>
+        </div>
+        <div class="field">
+          <span class="label">Atatürk'ten söz</span>
+          <div class="quotes">
+            <button type="button" data-opt="quote" data-v="hitabe" aria-pressed="true"><q>Ey Türk gençliği! Birinci vazifen…</q><small>Gençliğe Hitabe · 1927</small></button>
+            <button type="button" data-opt="quote" data-v="nemutlu" aria-pressed="false"><q>Ne mutlu Türküm diyene!</q><small>Onuncu Yıl Nutku · 1933</small></button>
+            <button type="button" data-opt="quote" data-v="azzaman" aria-pressed="false"><q>Az zamanda çok ve büyük işler yaptık.</q><small>Onuncu Yıl Nutku · 1933</small></button>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="nameInput">Kartın altındaki isim</label>
+          <input type="text" id="nameInput" maxlength="40" autocomplete="name" value="Mehmet Akif Soyuslu">
+        </div>
+        <div class="field">
+          <span class="label">Fotoğraf (isteğe bağlı)</span>
+          <div class="photo-row">
+            <label class="file-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3.5"/></svg>Fotoğraf ekle<input type="file" id="photoInput" accept="image/*"></label>
+            <button class="link-btn" id="removePhotoBtn" type="button" hidden>Fotoğrafı kaldır</button>
+          </div>
+          <p class="muted">Örneğin bir Atatürk fotoğrafı seç; ay yıldızın yerine altın çerçeveli madalyon olarak yerleşir. Fotoğraf cihazından çıkmaz.</p>
+        </div>
+        <div class="card-actions">
+          <div class="actions">
+            <button class="btn grow" id="shareBtn" type="button">Kartı paylaş</button>
+            <button class="btn ghost" id="replayBtn" type="button">Yeniden oyna</button>
+          </div>
+          <p class="status" id="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const rand = (a, b) => a + Math.random() * (b - a);
+const lerp = (a, b, t) => a + (b - a) * t;
+const approach = (cur, target, rate, dt) => cur + (target - cur) * (1 - Math.exp(-rate * dt));
+const easeOut = t => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
+function mulberry32(a) {
+  return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+
+const cs = getComputedStyle(document.documentElement);
+const tok = (n, d) => (cs.getPropertyValue(n) || '').trim() || d;
+const P = {
+  night: tok('--night', '#0b0d24'), night2: tok('--night-2', '#1c0c24'), dusk: tok('--dusk', '#3a0f22'),
+  flag: tok('--flag', '#e30a17'), flagDeep: tok('--flag-deep', '#99000f'),
+  paper: tok('--paper', '#fff8ee'), gold: tok('--gold', '#f3c34f'), ember: tok('--ember', '#ffad4d')
+};
+const FONT_D = '"Big Shoulders Display","Arial Narrow",Impact,sans-serif';
+const FONT_B = '"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif';
+const FONT_Q = '"Cormorant Garamond",Georgia,"Times New Roman",serif';
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+const vibrate = p => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
+
+const START_YEAR = 1923, GOAL = 103, END_YEAR = START_YEAR + GOAL; // 2026
+const MILESTONES = [
+  { y: 1923, t: "29 Ekim: Cumhuriyet ilan edildi." },
+  { y: 1924, t: "Tevhid-i Tedrisat Kanunu ile eğitim tek çatı altında birleşti." },
+  { y: 1926, t: "Türk Medeni Kanunu kabul edildi." },
+  { y: 1928, t: "Yeni Türk harfleri kabul edildi." },
+  { y: 1930, t: "Kadınlar belediye seçimlerinde seçme ve seçilme hakkı kazandı." },
+  { y: 1933, t: "Üniversite reformuyla İstanbul Üniversitesi kuruldu." },
+  { y: 1934, t: "Soyadı Kanunu çıkarıldı." },
+  { y: 1934, t: "Kadınlar milletvekili seçme ve seçilme hakkı kazandı." },
+  { y: 1936, t: "Montrö Boğazlar Sözleşmesi imzalandı." },
+  { y: 1940, t: "Köy Enstitüleri kuruldu." },
+  { y: 1953, t: "Anıtkabir tamamlandı." },
+  { y: 1973, t: "Boğaziçi Köprüsü, Cumhuriyet'in 50. yılında açıldı." },
+  { y: 2002, t: "Millî takım Dünya Kupası'nı üçüncü bitirdi." },
+  { y: 2023, t: "Cumhuriyet 100. yaşını kutladı." }
+];
+const COIN_COUNT = MILESTONES.length - 1;
+const PLAY_URL = /\.github\.io$/i.test(location.hostname) ? location.href.split('#')[0] : '';
+const SHARE_TEXT = "29 Ekim Cumhuriyet Bayramımızın 103. yılı kutlu olsun! 🇹🇷" + (PLAY_URL ? "\nSen de oyna: " + PLAY_URL : "");
+
+/* ---------- fonts: request Turkish glyphs so the latin-ext subsets load before canvas text ---------- */
+const SAMPLE = '29 EKİM Cumhuriyetİığüşöçâ’“”·–';
+const fontsReady = (document.fonts && document.fonts.load)
+  ? Promise.race([
+      Promise.all([
+        document.fonts.load('900 100px "Big Shoulders Display"', SAMPLE),
+        document.fonts.load('800 100px "Big Shoulders Display"', SAMPLE),
+        document.fonts.load('700 30px "DM Sans"', SAMPLE),
+        document.fonts.load('500 30px "DM Sans"', SAMPLE),
+        document.fonts.load('italic 500 40px "Cormorant Garamond"', SAMPLE),
+        document.fonts.load('italic 600 40px "Cormorant Garamond"', SAMPLE)
+      ]),
+      new Promise(r => setTimeout(r, 3500))
+    ]).catch(() => {})
+  : Promise.resolve();
+fontsReady.then(() => {
+  try {
+    let ok = false;
+    if (document.fonts) document.fonts.forEach(f => { if (f.family.replace(/["']/g, '') === 'Big Shoulders Display' && f.status === 'loaded') ok = true; });
+    if (!ok) document.documentElement.classList.add('nofont');
+  } catch (e) {}
+});
+
+/* ---------- optional viewer capability: file save inside the Claude app ---------- */
+let downloadsNs = null;
+if (window.claude && typeof window.claude.use === 'function') {
+  window.claude.use('downloads').then(ns => { downloadsNs = ns; }).catch(() => {});
+}
+
+/* ---------- geometry ---------- */
+const normA = a => { a %= TAU; return a < 0 ? a + TAU : a; };
+const passesCW = (a1, a2, t) => normA(t - a1) < normA(a2 - a1);
+// Crescent = outer circle minus an offset inner circle, traced along the two intersecting arcs.
+function crescentPath(c, ox, oy, R, dx, dy, r) {
+  const d = Math.hypot(dx, dy), ux = dx / d, uy = dy / d;
+  const a = (R * R - r * r + d * d) / (2 * d), h = Math.sqrt(Math.max(0, R * R - a * a));
+  const mx = ox + ux * a, my = oy + uy * a;
+  const p1x = mx - uy * h, p1y = my + ux * h, p2x = mx + uy * h, p2y = my - ux * h;
+  const back = Math.atan2(-uy, -ux);
+  const a1 = Math.atan2(p1y - oy, p1x - ox), a2 = Math.atan2(p2y - oy, p2x - ox);
+  c.moveTo(p1x, p1y);
+  c.arc(ox, oy, R, a1, a2, !passesCW(a1, a2, back));
+  const ix = ox + dx, iy = oy + dy;
+  const b2 = Math.atan2(p2y - iy, p2x - ix), b1 = Math.atan2(p1y - iy, p1x - ix);
+  c.arc(ix, iy, r, b2, b1, !passesCW(b2, b1, back));
+  c.closePath();
+}
+function starPath(c, x, y, R, rot) {
+  const r = R * 0.382;
+  for (let i = 0; i < 10; i++) {
+    const rad = i % 2 ? r : R, a = rot + i * Math.PI / 5;
+    const px = x + Math.cos(a) * rad, py = y + Math.sin(a) * rad;
+    if (i) c.lineTo(px, py); else c.moveTo(px, py);
+  }
+  c.closePath();
+}
+// Türk Bayrağı Kanunu proportions; hx = hoist edge, G = flag height.
+function flagEmblem(c, hx, cy, G) {
+  c.beginPath(); crescentPath(c, hx + 0.5 * G, cy, 0.25 * G, 0.0625 * G, 0, 0.2 * G); c.fill();
+  c.beginPath(); starPath(c, hx + 1.2208 * G, cy, 0.125 * G, Math.PI); c.fill();
+}
+
+/* ---------- HUD bits ---------- */
+const LIFE_SVG = '<svg viewBox="2 2 33 16" aria-hidden="true"><path d="M15.914 6.256A7 7 0 1 0 15.914 13.744A5.6 5.6 0 1 1 15.914 6.256Z"/><polygon points="26.68,10 29.1,9.21 29.1,6.67 30.59,8.73 33.01,7.94 31.52,10 33.01,12.06 30.59,11.27 29.1,13.33 29.1,10.79"/></svg>';
+const hud = $('#hud'), yearEl = $('#yearNow'), fillEl = $('#timeFill'), timeline = $('#timeline'), streakEl = $('#streak');
+const livesEl = $('#lives'), powMag = $('#powMagnet'), powShield = $('#powShield'), toast = $('#toast'), hintEl = $('#hint');
+livesEl.innerHTML = LIFE_SVG.repeat(3);
+const ticks = MILESTONES.slice(1).map((m, i) => {
+  const s = document.createElement('s');
+  s.style.left = ((m.y - START_YEAR) / GOAL * 100) + '%';
+  timeline.appendChild(s);
+  return { el: s, y: m.y, idx: i + 1 };
+});
+
+/* ---------- audio: small synth, starts on the first tap ---------- */
+const audio = {
+  ctx: null, master: null, noise: null, muted: store.get('cy-muted', '0') === '1',
+  init() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {}); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try {
+      const c = new AC(), comp = c.createDynamicsCompressor(), m = c.createGain();
+      comp.threshold.value = -16; comp.ratio.value = 4;
+      m.gain.value = this.muted ? 0 : 0.9; m.connect(comp); comp.connect(c.destination);
+      const len = c.sampleRate, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      this.ctx = c; this.master = m; this.noise = buf;
+    } catch (e) { this.ctx = null; }
+  },
+  setMuted(v) {
+    this.muted = v; store.set('cy-muted', v ? '1' : '0');
+    if (this.master) this.master.gain.setTargetAtTime(v ? 0 : 0.9, this.ctx.currentTime, 0.02);
+  },
+  tone(f, dur, o = {}) {
+    if (!this.ctx || this.muted) return;
+    const c = this.ctx, t = c.currentTime + (o.when || 0), osc = c.createOscillator(), g = c.createGain();
+    osc.type = o.type || 'triangle'; osc.frequency.setValueAtTime(f, t);
+    if (o.slideTo) osc.frequency.exponentialRampToValueAtTime(o.slideTo, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(o.vol || 0.1, t + (o.attack || 0.008)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g); g.connect(this.master); osc.start(t); osc.stop(t + dur + 0.05);
+  },
+  hiss(dur, o = {}) {
+    if (!this.ctx || this.muted || !this.noise) return;
+    const c = this.ctx, t = c.currentTime + (o.when || 0), s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = this.noise; f.type = o.type || 'lowpass'; f.frequency.setValueAtTime(o.freq || 800, t); f.Q.value = o.q || 0.7;
+    if (o.sweepTo) f.frequency.exponentialRampToValueAtTime(o.sweepTo, t + dur);
+    g.gain.setValueAtTime(o.vol || 0.2, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(this.master); s.start(t, Math.random() * 0.4); s.stop(t + dur + 0.05);
+  }
+};
+const PENTA = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51, 1567.98, 1760];
+const sfx = {
+  star(n) { const f = PENTA[(Math.max(1, n) - 1) % 10]; audio.tone(f, 0.24, { vol: 0.085 }); audio.tone(f * 2, 0.12, { type: 'sine', vol: 0.025, when: 0.01 }); },
+  gold() { [0, 4, 7].forEach((s, i) => audio.tone(783.99 * Math.pow(2, s / 12), 0.32, { vol: 0.065, when: i * 0.045 })); audio.tone(2093, 0.3, { type: 'sine', vol: 0.02, when: 0.13 }); },
+  coin() { [1046.5, 1318.5, 1568, 2093].forEach((f, i) => { audio.tone(f, 0.7, { type: 'sine', vol: 0.06, when: i * 0.08 }); audio.tone(f * 2.76, 0.22, { type: 'sine', vol: 0.012, when: i * 0.08 }); }); },
+  hit() { audio.hiss(0.7, { vol: 0.32, freq: 700, sweepTo: 70 }); audio.tone(120, 0.4, { type: 'sine', vol: 0.16, slideTo: 50 }); },
+  shield() { audio.tone(1760, 0.35, { type: 'square', vol: 0.025 }); audio.tone(1318.5, 0.35, { type: 'sine', vol: 0.05 }); audio.hiss(0.2, { vol: 0.1, freq: 3200, type: 'bandpass', q: 2 }); },
+  power() { audio.tone(392, 0.4, { vol: 0.06, slideTo: 1568 }); audio.tone(784, 0.3, { type: 'sine', vol: 0.03, when: 0.1, slideTo: 2093 }); },
+  bonus() { [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => audio.tone(f, 0.26, { type: 'square', vol: 0.03, when: i * 0.06 })); },
+  launch() { audio.hiss(0.6, { vol: 0.025, freq: 400, sweepTo: 3200, type: 'bandpass', q: 1.2 }); },
+  pop() { audio.hiss(0.7, { vol: 0.14, freq: 1600, sweepTo: 160 }); },
+  over() { [392, 329.63, 261.63].forEach((f, i) => audio.tone(f, 0.55, { vol: 0.075, when: i * 0.18 })); },
+  win() {
+    [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5, 1318.51].forEach((f, i) => audio.tone(f, i === 6 ? 1.3 : 0.22, { vol: 0.085, when: i * 0.13 }));
+    [261.63, 329.63, 392].forEach(f => audio.tone(f, 1.8, { type: 'sine', vol: 0.045, when: 0.78 }));
+  }
+};
+const soundBtns = [$('#soundBtn'), $('#soundBtn2')];
+function syncSound() {
+  soundBtns.forEach(b => { b.classList.toggle('muted', audio.muted); b.setAttribute('aria-label', audio.muted ? 'Sesi aç' : 'Sesi kapat'); });
+  $('#soundLabel').textContent = audio.muted ? 'Ses kapalı' : 'Ses açık';
+}
+soundBtns.forEach(b => b.addEventListener('click', () => { audio.init(); audio.setMuted(!audio.muted); syncSound(); }));
+syncSound();
+
+/* ---------- canvas & scene ---------- */
+const cv = $('#game'), ctx = cv.getContext('2d', { alpha: false });
+let W = 1, H = 1, DPR = 1, U = 1;
+const S = { sceneYear: END_YEAR, akT: 1, bridgeT: 1 };
+const player = { x: 0, y: 0, tx: 0, vx: 0, tilt: 0, flash: 0, squash: 0 };
+
+function glowSprite(rgb, size = 64) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'), gr = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  gr.addColorStop(0, `rgba(${rgb},1)`); gr.addColorStop(0.22, `rgba(${rgb},0.55)`); gr.addColorStop(0.55, `rgba(${rgb},0.14)`); gr.addColorStop(1, `rgba(${rgb},0)`);
+  g.fillStyle = gr; g.fillRect(0, 0, size, size);
+  return c;
+}
+const GLOW = { white: glowSprite('255,248,238'), gold: glowSprite('243,195,79'), ember: glowSprite('255,173,77'), red: glowSprite('255,70,80'), cool: glowSprite('190,215,255') };
+function glow(sprite, x, y, size, a) {
+  if (a <= 0) return;
+  ctx.globalAlpha = Math.min(1, a); ctx.drawImage(sprite, x - size / 2, y - size / 2, size, size); ctx.globalAlpha = 1;
+}
+function makeFlagSprite(w, h) {
+  const c = document.createElement('canvas'); c.width = Math.ceil(w * DPR); c.height = Math.ceil(h * DPR);
+  const g = c.getContext('2d'); g.scale(DPR, DPR);
+  g.fillStyle = P.flag; g.fillRect(0, 0, w, h); g.fillStyle = P.paper; flagEmblem(g, 0, h / 2, h);
+  return c;
+}
+function drawWavingFlag(sprite, dx, dy, dw, dh, amp, speed, t) {
+  const slices = Math.max(8, Math.round(dw / 2)), sw = sprite.width / slices, dsw = dw / slices;
+  for (let i = 0; i < slices; i++) {
+    const k = i / slices, ph = t * speed - k * 5.5, off = Math.sin(ph) * amp * k;
+    ctx.globalAlpha = 0.84 + 0.16 * Math.sin(ph + 1.3);
+    ctx.drawImage(sprite, i * sw, 0, Math.min(sw + 0.5, sprite.width - i * sw), sprite.height, dx + i * dsw, dy + off, dsw + 0.6, dh);
+  }
+  ctx.globalAlpha = 1;
+}
+
+const farY = x => S.farBase - Math.sin(x / W * 7.1 + 1.1) * 9 * U - Math.sin(x / W * 2.3 + 0.4) * 15 * U;
+const midY = x => S.midBase - 34 * U * Math.exp(-Math.pow((x - S.akX) / (0.2 * W + 40 * U), 2)) - Math.sin(x / W * 5.3 + 2) * 4 * U;
+const nearY = x => S.nearBase - Math.sin(x / W * 6.2 + 0.3) * 5 * U - Math.sin(x / W * 13 + 1) * 1.5 * U;
+const garY = x => S.garTop + S.garSag * (1 - Math.pow((x - W / 2) / (W * 0.56), 2));
+const garSlope = x => -2 * S.garSag * (x - W / 2) / Math.pow(W * 0.56, 2);
+
+function buildCity() {
+  const r = mulberry32(19231029);
+  S.cityCan = document.createElement('canvas'); S.cityCan.width = Math.ceil(W * DPR); S.cityCan.height = Math.ceil(S.cityH * DPR);
+  S.cityCtx = S.cityCan.getContext('2d');
+  const list = []; let x = -6 * U;
+  while (x < W + 6 * U) {
+    const year = 1924 + Math.floor(Math.pow(r(), 0.8) * 102), prog = (year - START_YEAR) / GOAL;
+    let w = (12 + r() * 16) * U, h = (16 + prog * 48 + r() * 24) * U, kind = year < 1960 && r() < 0.55 ? 'pitch' : 'flat';
+    if (year > 1975 && r() < 0.42) { kind = 'tower'; w = (9 + r() * 9) * U; h = (60 + prog * 68 + r() * 44) * U; }
+    if (x < W * 0.42) h *= 0.6;
+    h = Math.min(h, S.cityH - 18 * U);
+    const wins = [], gx = 4.2 * U, gy = 6 * U;
+    const cols = Math.max(1, Math.floor((w - 3 * U) / gx)), rows = Math.max(1, Math.floor((h - 6 * U) / gy));
+    const ox = (w - (cols * gx - 2 * U)) / 2;
+    for (let ci = 0; ci < cols; ci++) for (let ri = 0; ri < rows; ri++) {
+      if (r() < (kind === 'tower' ? 0.5 : 0.34)) wins.push({ dx: ox + ci * gx, dy: 4 * U + ri * gy, cool: kind === 'tower' && r() < 0.6 });
+    }
+    list.push({ x, w, h, year, kind, wins, cur: S.sceneYear >= year ? h : 0, ant: kind === 'tower' && r() < 0.6, ph: r() * TAU });
+    x += w * (0.58 + r() * 0.34);
+  }
+  list.sort((a, b) => b.h - a.h); // tall towers stand behind the low houses
+  S.buildings = list;
+  renderCity();
+}
+function renderCity() {
+  const c = S.cityCtx, base = S.cityH;
+  c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, W, base);
+  for (const b of S.buildings) {
+    if (b.cur < 0.5) continue;
+    const top = base - b.cur;
+    c.fillStyle = b.kind === 'tower' ? '#1b1739' : '#16122e';
+    c.fillRect(b.x, top, b.w, b.cur + 1);
+    if (b.kind === 'pitch') { c.beginPath(); c.moveTo(b.x - U, top); c.lineTo(b.x + b.w / 2, top - b.w * 0.3); c.lineTo(b.x + b.w + U, top); c.closePath(); c.fill(); }
+    if (b.kind === 'tower') { c.fillRect(b.x + b.w * 0.2, top - 5 * U, b.w * 0.6, 5 * U); if (b.ant) c.fillRect(b.x + b.w / 2 - 0.6 * U, top - 16 * U, 1.2 * U, 11 * U); }
+    c.fillStyle = 'rgba(255,150,100,0.08)'; c.fillRect(b.x, top, 1.2 * U, b.cur);
+    for (const pass of [false, true]) {
+      c.fillStyle = pass ? 'rgba(190,215,255,0.8)' : 'rgba(255,205,120,0.85)';
+      for (const wn of b.wins) { if (wn.cool !== pass || wn.dy + 6 * U > b.cur) continue; c.fillRect(b.x + wn.dx, base - wn.dy - 3 * U, 2.2 * U, 3 * U); }
+    }
+  }
+}
+function buildBridge() {
+  const x0 = -0.05 * W, x1 = W * 0.46, span = x1 - x0, deck = S.farBase - 4 * U, top = deck - 58 * U;
+  const ta = x0 + span * 0.17, tb = x0 + span * 0.83, mid = (ta + tb) / 2, half = (tb - ta) / 2, low = deck - 6 * U;
+  const cable = [];
+  for (let i = 0; i <= 10; i++) { const t = i / 10; cable.push([lerp(x0, ta, t), lerp(deck - 2 * U, top, t) + 7 * U * 4 * t * (1 - t)]); }
+  for (let i = 1; i <= 40; i++) { const x = lerp(ta, tb, i / 40), u = (x - mid) / half; cable.push([x, low - (low - top) * u * u]); }
+  for (let i = 1; i <= 10; i++) { const t = i / 10; cable.push([lerp(tb, x1, t), lerp(top, deck - 2 * U, t) + 7 * U * 4 * t * (1 - t)]); }
+  const hangers = cable.filter((p, i) => i % 2 === 0 && p[1] < deck - 3 * U);
+  const lights = [];
+  cable.forEach(([x, y], i) => { if (i % 2 === 0) lights.push({ x, y, red: (i / 2) % 2 === 0 }); });
+  for (let x = x0; x <= x1; x += 9 * U) lights.push({ x, y: deck + U, red: false });
+  lights.sort((a, b) => a.x - b.x);
+  S.bridge = { x0, x1, deck, top, ta, tb, cable, hangers, lights };
+}
+function buildScene() {
+  S.farBase = H - 128 * U; S.midBase = H - 58 * U; S.nearBase = H - 22 * U; S.cityBase = H - 46 * U; S.cityH = 250 * U;
+  S.akX = W * (W > 700 ? 0.66 : 0.7);
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, P.night); sky.addColorStop(0.58, P.night2); sky.addColorStop(1, P.dusk);
+  S.sky = sky;
+  const hg = ctx.createLinearGradient(0, S.farBase - 170 * U, 0, H);
+  hg.addColorStop(0, 'rgba(255,110,60,0)'); hg.addColorStop(1, 'rgba(255,110,60,0.24)');
+  S.horizon = hg;
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.75);
+  vg.addColorStop(0, 'rgba(227,10,23,0)'); vg.addColorStop(1, 'rgba(227,10,23,0.55)');
+  S.vignette = vg;
+  const r = mulberry32(103);
+  S.stars = [];
+  const n = Math.round(W * H / 3600);
+  for (let i = 0; i < n; i++) S.stars.push({ x: r() * W, y: r() * (S.farBase - 30 * U), r: 0.5 + r() * 1.4, p: r() * TAU, s: 0.5 + r() * 2 });
+  S.far = []; S.mid = []; S.near = [];
+  for (let i = 0; i <= 48; i++) { const x = i / 48 * W; S.far.push([x, farY(x)]); S.mid.push([x, midY(x)]); S.near.push([x, nearY(x)]); }
+  buildCity();
+  buildBridge();
+  S.flagW = Math.round(36 * U); S.flagH = Math.round(24 * U); S.flagSprite = makeFlagSprite(S.flagW, S.flagH);
+  S.miniW = Math.round(15 * U); S.miniH = Math.round(10 * U); S.miniFlag = makeFlagSprite(S.miniW, S.miniH);
+  S.garTop = 92; S.garSag = 14 * U; S.garFlags = [];
+  for (let x = 13 * U; x < W; x += 26 * U) S.garFlags.push({ x, ph: r() * TAU });
+  const gap = 21 * U, mn = Math.ceil(W * 1.05 / gap) + 1;
+  S.march = { gap, n: mn, items: [] };
+  for (let i = 0; i < mn; i++) S.march.items.push({ ph: r() * TAU, s: 0.82 + r() * 0.3, kind: r() < 0.68 ? 'lantern' : 'flag', a: 0 });
+  S.poleX = S.akX - 96 * U; S.poleBase = midY(S.poleX) + U; S.poleTop = S.poleBase - 68 * U;
+}
+function resize() {
+  const rc = cv.getBoundingClientRect();
+  W = Math.max(1, rc.width); H = Math.max(1, rc.height);
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  U = clamp(Math.min(W, H * 0.62) / 400, 0.82, 1.3);
+  buildScene();
+  player.y = H - Math.max(84 * U, H * 0.14);
+  player.x = clamp(player.x || W / 2, 34 * U, W - 34 * U);
+  player.tx = player.x;
+}
+window.addEventListener('resize', resize);
+
+/* ---------- game state ---------- */
+const state = {
+  mode: 'start', paused: false, t: 0, timeScale: 1, score: 0, lives: 3, items: [], parts: [], texts: [],
+  spawnT: 0.6, msIdx: 1, msCool: 0, coinLive: false, shake: 0, hurt: 0, streak: 0, bestStreak: 0, caught: 0, got: new Set(),
+  magnet: 0, shield: false, hintT: 0, moved: 0, emblem: null, winT: 0, emblemFade: 1, emblemFlashed: false,
+  bgFwT: 2.5, shootT: 3, shoot: null, fwT: 0, best: +store.get('cy-best', '0') || 0
+};
+const yearNow = () => Math.min(END_YEAR, START_YEAR + state.score);
+const progress = () => clamp((S.sceneYear - START_YEAR) / GOAL, 0, 1);
+const baseSpeed = () => H * (0.2 + state.score * 0.0026);
+
+function spawnItem(type, mul = 1) {
+  const v = baseSpeed() * mul, x = rand(26 * U, W - 26 * U);
+  const it = { type, x, x0: x, y: -30 * U, ph: rand(0, TAU), rot: rand(0, TAU), vr: rand(-1.6, 1.6), drift: 0, df: rand(1, 2), dead: false, r: 14 * U, vy: v };
+  if (type === 'star') { it.r = 12.5 * U; it.vy = v * rand(0.88, 1.1); it.drift = rand(0, 18) * U; }
+  else if (type === 'gold') { it.r = 15 * U; it.vy = v * rand(1.05, 1.22); it.drift = rand(10, 24) * U; it.df = rand(1.4, 2.4); }
+  else if (type === 'cloud') { it.w = rand(58, 78) * U; it.h = it.w * 0.56; it.r = it.w * 0.34; it.vy = v * rand(0.82, 1.02); it.vr = 0; it.rot = 0; }
+  else if (type === 'fener' || type === 'bayrak') { it.r = 16 * U; it.vy = v * 0.8; it.drift = 14 * U; it.df = 1.4; }
+  state.items.push(it);
+  return it;
+}
+function spawnCoin() {
+  const m = MILESTONES[state.msIdx], x = rand(40 * U, W - 40 * U);
+  state.items.push({ type: 'coin', m, idx: state.msIdx, x, x0: x, y: -26 * U, vy: baseSpeed() * 0.78, r: 21 * U, ph: 0, drift: 14 * U, df: 1.2, rot: 0, vr: 0, dead: false });
+  state.coinLive = true;
+}
+function burst(x, y, colors, n, speed, layer = 'fg') {
+  if (reduceMotion) n = Math.ceil(n / 3);
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, TAU), sp = rand(0.3, 1) * speed;
+    state.parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: rand(0.5, 1.1), max: 1.1, c: colors[i % colors.length], s: rand(1.4, 3) * U, g: 260, layer });
+  }
+}
+function floatText(x, y, text, color, big) {
+  state.texts.push({ x: clamp(x, 60 * U, W - 60 * U), y, text, c: color, life: 1.1, max: 1.1, big: !!big });
+}
+function rocket(layer = 'fg') {
+  const bg = layer === 'bg', x = rand(W * 0.12, W * 0.88);
+  state.parts.push({ rocket: true, layer, x, y: bg ? S.farBase : H, vx: rand(-20, 20) * U, vy: -(bg ? rand(0.5, 0.62) : rand(0.95, 1.25)) * H,
+    ty: H * rand(bg ? 0.2 : 0.12, 0.42), life: 4, max: 4, c: P.gold, s: (bg ? 1.3 : 2.2) * U, g: 0 });
+  if (!bg) sfx.launch();
+}
+function explode(x, y, layer) {
+  const bg = layer === 'bg', pals = [[P.flag, P.paper], [P.gold, P.paper], [P.flag, P.gold], [P.paper, P.paper, P.gold]];
+  const pal = pals[(Math.random() * pals.length) | 0], n = reduceMotion ? 18 : (bg ? 34 : 72), sp = (bg ? rand(60, 90) : rand(150, 240)) * U;
+  for (let i = 0; i < n; i++) {
+    const a = i / n * TAU + rand(-0.05, 0.05), v = sp * rand(0.7, 1);
+    state.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rand(1.1, 1.7), max: 1.7, c: pal[i % pal.length], s: (bg ? 1.1 : rand(1.6, 2.6)) * U, g: bg ? 35 : 90, drag: 1.6, tw: Math.random() < 0.3, layer });
+  }
+  if (!bg) sfx.pop();
+}
+
+/* ---------- HUD, toast, hint ---------- */
+function bumpYear() { if (reduceMotion) return; yearEl.classList.remove('bump'); void yearEl.offsetWidth; yearEl.classList.add('bump'); }
+function updateHud() {
+  const y = yearNow();
+  yearEl.textContent = y;
+  fillEl.style.width = (state.score / GOAL * 100) + '%';
+  ticks.forEach(tk => { tk.el.classList.toggle('done', tk.y <= y); tk.el.classList.toggle('got', state.got.has(tk.idx)); });
+  [...livesEl.children].forEach((el, i) => el.classList.toggle('lost', i >= state.lives));
+  livesEl.setAttribute('aria-label', state.lives + ' can');
+}
+function updateStreak() {
+  streakEl.style.visibility = state.streak >= 3 ? 'visible' : 'hidden';
+  if (state.streak >= 3) streakEl.textContent = 'Seri ×' + state.streak;
+}
+function updatePowers() {
+  powMag.hidden = !(state.magnet > 0);
+  if (state.magnet > 0) powMag.style.setProperty('--p', String(clamp(state.magnet / 7, 0, 1)));
+  powShield.hidden = !state.shield;
+}
+let toastTimer = 0;
+function showToast(m) {
+  $('#toastYear').textContent = m.y; $('#toastText').textContent = m.t;
+  toast.hidden = false; toast.classList.remove('in'); void toast.offsetWidth; toast.classList.add('in');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.hidden = true; }, 3800);
+}
+function hideHint() { hintEl.hidden = true; state.hintT = 0; }
+
+/* ---------- flow ---------- */
+const sheets = { start: $('#startSheet'), pause: $('#pauseSheet'), over: $('#overSheet'), win: $('#winSheet'), card: $('#cardSheet') };
+function showSheet(name) { Object.entries(sheets).forEach(([k, el]) => { el.hidden = k !== name; }); }
+function updateBestLine() {
+  const b = $('#bestLine');
+  if (state.best > START_YEAR) { b.textContent = state.best >= END_YEAR ? 'Yolu tamamladın: 2026 ★' : `En uzun yolculuğun: ${state.best}`; b.hidden = false; } else b.hidden = true;
+}
+function startGame() {
+  audio.init();
+  Object.assign(state, { mode: 'play', paused: false, score: 0, lives: 3, items: [], texts: [], spawnT: 0.8, msIdx: 1, msCool: 2.6, coinLive: false,
+    shake: 0, hurt: 0, streak: 0, bestStreak: 0, caught: 0, got: new Set(), magnet: 0, shield: false, hintT: 4.5, moved: 0, timeScale: 1, emblem: null });
+  state.parts = state.parts.filter(p => p.layer === 'bg');
+  player.x = player.tx = W / 2;
+  showSheet(null); hud.hidden = false; hintEl.hidden = false;
+  updateHud(); updateStreak(); updatePowers();
+  showToast(MILESTONES[0]);
+}
+function goHome() {
+  state.mode = 'start'; state.paused = false; state.items = []; state.texts = [];
+  hud.hidden = true; toast.hidden = true; hideHint();
+  updateBestLine(); showSheet('start');
+}
+function pause() {
+  if (state.mode !== 'play' || state.paused) return;
+  state.paused = true; hideHint(); showSheet('pause');
+}
+function resume() {
+  if (!state.paused) return;
+  state.paused = false; showSheet(null); audio.init();
+}
+function addScore(n) {
+  if (state.mode !== 'play') return;
+  const before = yearNow();
+  state.score = Math.min(GOAL, state.score + n);
+  if (yearNow() !== before) bumpYear();
+  updateHud();
+  if (state.score >= GOAL) win();
+}
+function catchItem(it) {
+  const y = player.y - 10 * U;
+  if (it.type === 'cloud') {
+    if (state.shield) {
+      state.shield = false; updatePowers();
+      burst(it.x, it.y, [P.paper, P.flag, '#8f8ab0'], 26, 240 * U);
+      floatText(it.x, y - 30 * U, 'Bayrak kalkanı!', P.paper); sfx.shield(); vibrate(20);
+      return;
+    }
+    state.lives--; state.streak = 0; updateStreak();
+    state.shake = 1; state.hurt = 1; player.flash = 0;
+    burst(it.x, y, ['#77729a', '#3a3756', P.flag], 24, 230 * U); sfx.hit(); vibrate(70);
+    updateHud();
+    if (state.lives <= 0) gameOver();
+    return;
+  }
+  player.flash = 1; player.squash = 1; state.caught++;
+  state.streak++; state.bestStreak = Math.max(state.bestStreak, state.streak); updateStreak();
+  if (it.type === 'star') { burst(it.x, y, [P.paper, P.paper, P.gold], 12, 160 * U); sfx.star(state.streak); addScore(1); }
+  else if (it.type === 'gold') { burst(it.x, y, [P.gold, P.ember, P.paper], 18, 200 * U); floatText(it.x, y - 22 * U, '+3', P.gold); sfx.gold(); addScore(3); }
+  else if (it.type === 'coin') {
+    state.coinLive = false; state.got.add(it.idx); state.msIdx = Math.max(state.msIdx, it.idx + 1); state.msCool = 1.8;
+    showToast(it.m); burst(it.x, y, [P.gold, P.flag, P.paper], 30, 240 * U); floatText(it.x, y - 26 * U, '+5', P.gold); sfx.coin(); vibrate(15);
+    addScore(5);
+  } else if (it.type === 'fener') {
+    state.magnet = 7; updatePowers(); burst(it.x, y, [P.ember, P.gold], 22, 200 * U); floatText(it.x, y - 26 * U, 'Fener: yıldızlar sana gelir', P.ember); sfx.power();
+  } else if (it.type === 'bayrak') {
+    state.shield = true; updatePowers(); burst(it.x, y, [P.flag, P.paper], 22, 200 * U); floatText(it.x, y - 26 * U, 'Bayrak kalkanı hazır', P.paper); sfx.power();
+  }
+  if (state.mode === 'play' && state.streak > 0 && state.streak % 10 === 0) {
+    floatText(player.x, player.y - 70 * U, `Seri ×${state.streak} · +3 yıl`, P.gold, true);
+    sfx.bonus(); rocket('fg'); setTimeout(() => rocket('fg'), 220);
+    addScore(3);
+  }
+}
+function missed(it) {
+  if (it.type === 'coin') { state.coinLive = false; state.msCool = 1.2; }
+  if (it.type === 'star' || it.type === 'gold' || it.type === 'coin') { state.streak = 0; updateStreak(); }
+}
+function saveBest(y) { if (y > state.best) { state.best = y; store.set('cy-best', String(y)); } }
+function gameOver() {
+  state.mode = 'over'; state.timeScale = 0.3;
+  const y = yearNow(); saveBest(y); hideHint();
+  setTimeout(sfx.over, 220);
+  setTimeout(() => { if (state.mode === 'over') { fillResult('over'); showSheet('over'); } }, 950);
+}
+function win() {
+  state.mode = 'win'; state.winT = 0; state.emblemFlashed = false; saveBest(END_YEAR);
+  hideHint(); toast.hidden = true; hud.hidden = true;
+  state.items.forEach(it => burst(it.x, it.y, [P.gold, P.paper], 8, 120 * U));
+  state.items = []; state.magnet = 0; updatePowers();
+  state.timeScale = 0.4; sfx.win(); vibrate([30, 40, 30, 40, 90]);
+  buildEmblem();
+  setTimeout(() => { if (state.mode === 'win') { fillResult('win'); showSheet('win'); } }, 2700);
+}
+function openCard(fromStart) {
+  $('#replayBtn').textContent = fromStart === true ? 'Oyuna başla' : 'Yeniden oyna';
+  state.mode = 'card'; state.paused = false; showSheet('card'); hud.hidden = true; toast.hidden = true; hideHint();
+  syncCardControls(); renderCard();
+  sheets.card.scrollTop = 0;
+}
+
+/* ---------- result sheets ---------- */
+function statsHtml() {
+  return `<div><dt>Yıldız</dt><dd>${state.caught}</dd></div><div><dt>En uzun seri</dt><dd>${state.bestStreak}</dd></div><div><dt>Madalyon</dt><dd>${state.got.size}/${COIN_COUNT}</dd></div>`;
+}
+function renderAlbum(box, note) {
+  box.innerHTML = '';
+  MILESTONES.slice(1).forEach((m, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = m.y;
+    const idx = i + 1, got = state.got.has(idx);
+    if (got) b.classList.add('got');
+    b.setAttribute('aria-pressed', 'false');
+    b.setAttribute('aria-label', `${m.y}: ${m.t}${got ? '' : ' (bu turda kaçtı)'}`);
+    b.addEventListener('click', () => {
+      box.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      note.innerHTML = '';
+      const yb = document.createElement('b'); yb.textContent = m.y; note.append(yb, document.createTextNode(m.t + (got ? '' : ' · Bu turda kaçtı.')));
+    });
+    box.appendChild(b);
+  });
+  note.textContent = state.got.size ? 'Bir yıla dokun, o yılın notunu oku.' : 'Altın madalyonları yakaladıkça Cumhuriyet tarihinden notlar açılır.';
+}
+function fillResult(kind) {
+  if (kind === 'over') {
+    const y = yearNow(), left = END_YEAR - y;
+    $('#overYear').textContent = y;
+    $('#overTitle').textContent = left <= 10 ? 'Çok az kaldı!' : left <= 45 ? 'Güzel yolculuk' : 'Kara bulutlar bu turu aldı';
+    $('#overText').textContent = `2026'ya ${left} yıl kaldı. Gri bulutların altından çekil, fener ve bayrak güçlerini topla.`;
+    $('#overStats').innerHTML = statsHtml();
+    renderAlbum($('#overAlbum'), $('#overNote'));
+  } else {
+    $('#winStats').innerHTML = statsHtml();
+    renderAlbum($('#winAlbum'), $('#winNote'));
+  }
+}
+
+$('#startBtn').addEventListener('click', startGame);
+$('#retryBtn').addEventListener('click', startGame);
+$('#restartBtn').addEventListener('click', startGame);
+$('#replayBtn').addEventListener('click', startGame);
+$('#winReplayBtn').addEventListener('click', startGame);
+$('#resumeBtn').addEventListener('click', resume);
+$('#homeBtn').addEventListener('click', goHome);
+$('#pauseBtn').addEventListener('click', pause);
+$('#overCardBtn').addEventListener('click', () => openCard(false));
+$('#openCardBtn').addEventListener('click', () => openCard(false));
+$('#directCardBtn').addEventListener('click', () => openCard(true));
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+
+/* ---------- input ---------- */
+function aim(e) { const rc = cv.getBoundingClientRect(); player.tx = clamp(e.clientX - rc.left, 30 * U, W - 30 * U); }
+cv.addEventListener('pointerdown', e => { if (state.mode === 'play') aim(e); audio.init(); });
+cv.addEventListener('pointermove', e => { if (state.mode === 'play' && (e.pointerType === 'mouse' || e.buttons || e.pressure > 0)) aim(e); });
+const keys = { l: false, r: false };
+window.addEventListener('keydown', e => {
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' && (e.key === ' ' || e.key === 'Enter'))) return;
+  const k = e.key;
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') { keys.l = true; e.preventDefault(); }
+  if (k === 'ArrowRight' || k === 'd' || k === 'D') { keys.r = true; e.preventDefault(); }
+  if (k === 'Escape' || k === 'p' || k === 'P') { if (state.paused) resume(); else pause(); }
+});
+window.addEventListener('keyup', e => {
+  const k = e.key;
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') keys.l = false;
+  if (k === 'ArrowRight' || k === 'd' || k === 'D') keys.r = false;
+});
+
+/* ---------- win emblem: the collected stars rise and form the ay yıldız ---------- */
+function buildEmblem() {
+  const G = Math.min((W * 0.84) / 1.0958, (H * 0.27) / 0.5), cx = W / 2, cy = Math.max(120 + G * 0.25, H * 0.3);
+  const c = document.createElement('canvas'); c.width = Math.ceil(W); c.height = Math.ceil(H);
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; flagEmblem(g, cx - 0.7979 * G, cy, G);
+  const step = Math.max(4, Math.round(G / 62)), data = g.getImageData(0, 0, c.width, c.height).data, pts = [];
+  for (let y = 0; y < c.height; y += step) for (let x = 0; x < c.width; x += step) if (data[(y * c.width + x) * 4 + 3] > 128) pts.push([x + rand(-0.8, 0.8), y + rand(-0.8, 0.8)]);
+  while (pts.length > (reduceMotion ? 240 : 520)) pts.splice((Math.random() * pts.length) | 0, 1);
+  state.emblem = pts.map(([tx, ty]) => ({ x: player.x + rand(-24, 24) * U, y: player.y - 10 * U, vx: rand(-180, 180) * U, vy: -rand(300, 720) * U, tx, ty, delay: rand(0, 0.9), a: 0 }));
+  state.emblemCx = cx; state.emblemCy = cy; state.emblemG = G; state.emblemFade = 1;
+}
+function updateEmblem(dt) {
+  if (!state.emblem) return;
+  state.winT += dt;
+  for (const p of state.emblem) {
+    if (state.winT < p.delay) continue;
+    p.a = Math.min(1, p.a + dt * 3);
+    p.vx += ((p.tx - p.x) * 16 - p.vx * 6.5) * dt; p.vy += ((p.ty - p.y) * 16 - p.vy * 6.5) * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+  }
+  if (!state.emblemFlashed && state.winT > 1.9) {
+    state.emblemFlashed = true;
+    for (let i = 0; i < 4; i++) setTimeout(() => rocket('fg'), i * 260);
+  }
+  if (state.mode !== 'win') { state.emblemFade -= dt * 0.7; if (state.emblemFade <= 0) state.emblem = null; }
+}
+function drawEmblem() {
+  if (!state.emblem) return;
+  const f = clamp(state.emblemFade, 0, 1);
+  if (state.winT > 1.7) { const k = clamp((state.winT - 1.7) / 0.5, 0, 1), pulse = 1 - clamp((state.winT - 1.9) / 1.6, 0, 1); glow(GLOW.white, state.emblemCx, state.emblemCy, state.emblemG * 1.9, (0.22 + 0.5 * pulse) * k * f); }
+  ctx.globalCompositeOperation = 'lighter';
+  const ds = 6 * U;
+  for (const p of state.emblem) {
+    if (p.a <= 0) continue;
+    const tw = 0.72 + 0.28 * Math.sin(state.t * 6 + p.tx * 0.07 + p.ty * 0.05);
+    ctx.globalAlpha = p.a * f * tw;
+    ctx.drawImage(GLOW.white, p.x - ds / 2, p.y - ds / 2, ds, ds);
+  }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+}
+
+/* ---------- update ---------- */
+function hits(it) {
+  const R = 38 * U, top = player.y - R * 0.9, bottom = player.y + R * 0.5;
+  return Math.abs(it.x - player.x) < R * 0.9 + it.r * 0.45 && it.y + it.r * 0.6 > top && it.y - it.r * 0.6 < bottom;
+}
+function updatePlay(dt) {
+  if (keys.l) player.tx -= 560 * U * dt;
+  if (keys.r) player.tx += 560 * U * dt;
+  player.tx = clamp(player.tx, 30 * U, W - 30 * U);
+  state.spawnT -= dt;
+  if (state.spawnT <= 0) {
+    const s = state.score, roll = Math.random(), pCloud = Math.min(0.34, 0.12 + s * 0.0022), pPow = 0.045;
+    const canPow = s > 8 && state.magnet <= 0 && !state.items.some(i => i.type === 'fener' || i.type === 'bayrak');
+    if (canPow && roll < pPow) spawnItem(state.shield || Math.random() < 0.5 ? 'fener' : 'bayrak');
+    else if (roll < pPow + pCloud) spawnItem('cloud');
+    else if (roll < pPow + pCloud + 0.1) spawnItem('gold');
+    else spawnItem('star');
+    state.spawnT = Math.max(0.34, 0.86 - s * 0.005) * rand(0.8, 1.2);
+  }
+  state.msCool -= dt;
+  const m = MILESTONES[state.msIdx];
+  if (m && !state.coinLive && state.msCool <= 0 && yearNow() >= m.y) spawnCoin();
+  if (state.magnet > 0) { state.magnet -= dt; updatePowers(); }
+  if (state.hintT > 0) { state.hintT -= dt; if (state.hintT <= 0 || state.moved > 50 * U) hideHint(); }
+}
+function updateAttract(dt) {
+  state.spawnT -= dt;
+  if (state.spawnT <= 0) { const r = Math.random(); spawnItem(r < 0.18 ? 'cloud' : r < 0.3 ? 'gold' : 'star', 0.62); state.spawnT = rand(0.75, 1.3); }
+  let best = null;
+  for (const it of state.items) if (it.type !== 'cloud' && it.y < player.y - 8 * U && (!best || it.y > best.y)) best = it;
+  let tx = best ? best.x : W / 2 + Math.sin(state.t * 0.7) * W * 0.25;
+  for (const it of state.items) if (it.type === 'cloud' && it.y > player.y - 170 * U && it.y < player.y + 10 * U && Math.abs(it.x - tx) < 62 * U) tx = it.x + (tx < it.x ? -1 : 1) * 84 * U;
+  player.tx = clamp(tx, 34 * U, W - 34 * U);
+}
+function updateItems(dt) {
+  for (const it of state.items) {
+    if (it.dead) continue;
+    it.y += it.vy * dt; it.ph += dt; it.rot += it.vr * dt;
+    if (state.magnet > 0 && state.mode === 'play' && it.type !== 'cloud' && it.y > H * 0.18) { it.x0 = approach(it.x0, player.x, 2.8, dt); it.drift *= Math.max(0, 1 - dt * 2); }
+    it.x = it.drift ? clamp(it.x0 + Math.sin(it.ph * it.df) * it.drift, 14 * U, W - 14 * U) : it.x0;
+    if (hits(it)) {
+      if (state.mode === 'play') { it.dead = true; catchItem(it); continue; }
+      if (state.mode === 'start' && it.type !== 'cloud') { it.dead = true; burst(it.x, player.y - 10 * U, [P.paper, P.gold], 8, 140 * U); player.flash = 0.7; player.squash = 0.7; continue; }
+    }
+    if (it.y - 50 * U > H) { it.dead = true; if (state.mode === 'play') missed(it); }
+  }
+  state.items = state.items.filter(i => !i.dead);
+}
+function updateParts(dt) {
+  const add = [];
+  for (const p of state.parts) {
+    p.life -= dt;
+    if (p.rocket) {
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy *= (1 - dt * 0.6);
+      if (Math.random() < 0.7) add.push({ x: p.x, y: p.y, vx: rand(-15, 15), vy: rand(10, 40), life: 0.4, max: 0.4, c: P.ember, s: (p.layer === 'bg' ? 0.9 : 1.4) * U, g: 0, layer: p.layer });
+      if (p.y <= p.ty || p.vy > -40) { p.life = 0; explode(p.x, p.y, p.layer); }
+      continue;
+    }
+    if (p.drag) { const k = Math.max(0, 1 - dt * p.drag); p.vx *= k; p.vy *= k; }
+    p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+  }
+  if (add.length) state.parts.push(...add);
+  state.parts = state.parts.filter(p => p.life > 0);
+  for (const t of state.texts) { t.life -= dt; t.y -= 46 * U * dt; }
+  state.texts = state.texts.filter(t => t.life > 0);
+}
+function updateScene(dt) {
+  S.sceneYear = (state.mode === 'play' || state.mode === 'over') ? yearNow() : END_YEAR;
+  let dirty = false;
+  for (const b of S.buildings) {
+    const target = S.sceneYear >= b.year ? b.h : 0;
+    if (b.cur !== target) {
+      b.cur = Math.abs(target - b.cur) < 0.4 ? target : approach(b.cur, target, target > b.cur ? 3.4 : 7, dt);
+      dirty = true;
+    }
+  }
+  if (dirty) renderCity();
+  S.akT = approach(S.akT, S.sceneYear >= 1953 ? 1 : 0, S.sceneYear >= 1953 ? 1.4 : 6, dt);
+  S.bridgeT = approach(S.bridgeT, S.sceneYear >= 1973 ? 1 : 0, S.sceneYear >= 1973 ? 1.2 : 6, dt);
+  const k = Math.round(lerp(4, S.march.n, progress()));
+  S.march.items.forEach((m, i) => { m.a = approach(m.a, i < k ? 1 : 0, 2.5, dt); });
+  // ambient sky: distant fireworks and the odd shooting star
+  state.bgFwT -= dt;
+  if (state.bgFwT <= 0 && state.mode !== 'win') { rocket('bg'); state.bgFwT = state.mode === 'card' ? rand(1.6, 2.8) : rand(4, 8); }
+  if (state.mode === 'win') { state.fwT -= dt; if (state.fwT <= 0 && state.winT > 1.9) { rocket('fg'); state.fwT = rand(0.4, 0.75); } }
+  state.shootT -= dt;
+  if (state.shootT <= 0 && !state.shoot) { state.shoot = { x: rand(W * 0.1, W * 0.9), y: rand(H * 0.08, H * 0.35), vx: rand(-1, 1) < 0 ? -420 * U : 420 * U, vy: 160 * U, life: 0.7, max: 0.7 }; state.shootT = rand(6, 12); }
+  if (state.shoot) { const s = state.shoot; s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; if (s.life <= 0) state.shoot = null; }
+}
+function updatePlayer(dt) {
+  const x0 = player.x;
+  player.x = approach(player.x, player.tx, state.mode === 'start' ? 6 : 18, dt);
+  if (dt > 0) player.vx = lerp(player.vx, (player.x - x0) / dt, 0.3);
+  player.tilt = approach(player.tilt, clamp(player.vx / (1500 * U), -0.3, 0.3), 12, dt);
+  if (state.mode === 'play') state.moved += Math.abs(player.x - x0);
+  player.flash = Math.max(0, player.flash - dt * 3);
+  player.squash = Math.max(0, player.squash - dt * 5);
+  if (state.mode === 'play' && Math.abs(player.vx) > 520 * U && Math.random() < 0.6 && !reduceMotion) {
+    state.parts.push({ x: player.x + rand(-12, 12) * U, y: player.y - rand(0, 14) * U, vx: 0, vy: rand(10, 40), life: 0.35, max: 0.35, c: P.paper, s: 1.5 * U, g: 0, layer: 'fg' });
+  }
+}
+function update(rdt) {
+  const dt = rdt * state.timeScale;
+  state.timeScale = approach(state.timeScale, 1, 2.6, rdt);
+  state.t += dt;
+  updateScene(dt);
+  if (state.mode === 'play') updatePlay(dt);
+  else if (state.mode === 'start') updateAttract(dt);
+  updatePlayer(dt);
+  updateItems(dt);
+  updateParts(dt);
+  updateEmblem(dt);
+  state.shake = Math.max(0, state.shake - rdt * 2.4);
+  state.hurt = Math.max(0, state.hurt - rdt * 1.8);
+}
+
+/* ---------- draw ---------- */
+function fillPoly(pts, color) {
+  ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(0, H + 2);
+  for (const [x, y] of pts) ctx.lineTo(x, y);
+  ctx.lineTo(W, H + 2); ctx.closePath(); ctx.fill();
+}
+function drawSky() {
+  ctx.fillStyle = S.sky; ctx.fillRect(-20, -20, W + 40, H + 40);
+  ctx.fillStyle = P.paper;
+  for (const s of S.stars) { ctx.globalAlpha = 0.18 + 0.55 * (0.5 + 0.5 * Math.sin(state.t * s.s + s.p)); ctx.fillRect(s.x, s.y, s.r, s.r); }
+  ctx.globalAlpha = 1;
+  const sh = state.shoot;
+  if (sh) {
+    const a = clamp(sh.life / sh.max, 0, 1), tx = sh.x - sh.vx * 0.12, ty = sh.y - sh.vy * 0.12;
+    const g = ctx.createLinearGradient(sh.x, sh.y, tx, ty); g.addColorStop(0, `rgba(255,248,238,${0.9 * a})`); g.addColorStop(1, 'rgba(255,248,238,0)');
+    ctx.strokeStyle = g; ctx.lineWidth = 1.6 * U; ctx.beginPath(); ctx.moveTo(sh.x, sh.y); ctx.lineTo(tx, ty); ctx.stroke();
+  }
+}
+function drawBridge() {
+  const t = S.bridgeT; if (t <= 0.01) return;
+  const B = S.bridge;
+  ctx.globalAlpha = t;
+  ctx.strokeStyle = 'rgba(70,60,120,0.55)'; ctx.lineWidth = 0.8 * U; ctx.beginPath();
+  for (const [x, y] of B.hangers) { ctx.moveTo(x, y); ctx.lineTo(x, B.deck); }
+  ctx.stroke();
+  ctx.strokeStyle = '#3b3270'; ctx.lineWidth = 1.6 * U; ctx.beginPath();
+  B.cable.forEach(([x, y], i) => { if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+  ctx.stroke();
+  ctx.fillStyle = '#251f48';
+  for (const tx of [B.ta, B.tb]) { ctx.fillRect(tx - 2.2 * U, B.top, 4.4 * U, B.deck - B.top + 12 * U); ctx.fillRect(tx - 3.6 * U, B.top + 5 * U, 7.2 * U, 1.6 * U); ctx.fillRect(tx - 3.6 * U, B.top + 28 * U, 7.2 * U, 1.6 * U); }
+  ctx.fillRect(B.x0, B.deck, B.x1 - B.x0, 2.6 * U);
+  ctx.globalAlpha = 1;
+  const shown = Math.floor(B.lights.length * t);
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < shown; i++) { const L = B.lights[i]; glow(L.red ? GLOW.red : GLOW.white, L.x, L.y, 7 * U, 0.65 + 0.3 * Math.sin(state.t * 3 + i)); }
+  ctx.globalCompositeOperation = 'source-over';
+}
+function drawCity() {
+  const top = S.cityBase - S.cityH;
+  ctx.drawImage(S.cityCan, 0, top, W, S.cityH);
+  for (const b of S.buildings) {
+    if (!b.ant || b.cur < b.h * 0.98) continue;
+    const on = Math.sin(state.t * 2.4 + b.ph) > 0.2;
+    if (on) glow(GLOW.red, b.x + b.w / 2, S.cityBase - b.h - 16 * U, 9 * U, 0.9);
+  }
+}
+function drawAnitkabir() {
+  const t = S.akT; if (t <= 0.01) return;
+  const s = 0.27 * U, cx = S.akX, ground = midY(cx) + 2 * U, rise = (1 - easeOut(t)) * 140 * s;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(cx - 320 * s, ground - 220 * s, 640 * s, 220 * s + 1); ctx.clip();
+  ctx.translate(0, rise);
+  const pTop = ground - 46 * s, colH = 52 * s, colTop = pTop - colH;
+  glow(GLOW.ember, cx, colTop + colH * 0.5, 560 * s, 0.4 * t);
+  ctx.fillStyle = `rgba(255,199,106,${0.9 * t})`; ctx.fillRect(cx - 196 * s, colTop + 2 * s, 392 * s, colH - 2 * s);
+  ctx.fillStyle = '#0d0a1f';
+  ctx.fillRect(cx - 260 * s, ground - 8 * s, 520 * s, 36 * s);
+  ctx.fillRect(cx - 246 * s, ground - 16 * s, 492 * s, 8 * s);
+  ctx.fillRect(cx - 232 * s, ground - 24 * s, 464 * s, 8 * s);
+  ctx.fillRect(cx - 214 * s, pTop, 428 * s, 22 * s);
+  const n = 12, colW = 13 * s, span = 396 * s;
+  for (let i = 0; i < n; i++) ctx.fillRect(cx - span / 2 + i * (span - colW) / (n - 1), colTop, colW, colH);
+  ctx.fillRect(cx - 212 * s, colTop - 14 * s, 424 * s, 14 * s);
+  ctx.fillRect(cx - 200 * s, colTop - 26 * s, 400 * s, 12 * s);
+  ctx.restore();
+}
+function drawPole() {
+  glow(GLOW.white, S.poleX + S.flagW / 2, S.poleTop + S.flagH / 2, 90 * U, 0.12);
+  ctx.fillStyle = '#2a2342'; ctx.fillRect(S.poleX - 1.3 * U, S.poleTop, 2.6 * U, S.poleBase - S.poleTop);
+  ctx.fillStyle = P.gold; ctx.beginPath(); ctx.arc(S.poleX, S.poleTop - 2.4 * U, 2.4 * U, 0, TAU); ctx.fill();
+  drawWavingFlag(S.flagSprite, S.poleX + 1.3 * U, S.poleTop + U, S.flagW, S.flagH, 3.2 * U, 3.4, state.t);
+}
+function drawMarchers() {
+  const M = S.march, span = M.n * M.gap + W * 0.2;
+  ctx.strokeStyle = '#06051a'; ctx.fillStyle = '#06051a';
+  for (let i = 0; i < M.n; i++) {
+    const m = M.items[i]; if (m.a < 0.02) continue;
+    const x = ((i * M.gap + state.t * 15 * U) % span) - M.gap;
+    if (x < -20 * U || x > W + 20 * U) continue;
+    const y = nearY(x), h = 15 * U * m.s, step = Math.sin(state.t * 7 + m.ph), bob = Math.abs(step) * 0.8 * U;
+    const hip = y - h * 0.42 - bob, sh = y - h * 0.78 - bob, head = y - h * 0.93 - bob, tipX = x + 4 * U, tipY = head - 9 * U * m.s;
+    ctx.globalAlpha = m.a;
+    ctx.lineWidth = 1.6 * U; ctx.beginPath();
+    ctx.moveTo(x, hip); ctx.lineTo(x + step * 2.2 * U, y + U); ctx.moveTo(x, hip); ctx.lineTo(x - step * 2.2 * U, y + U);
+    ctx.moveTo(x + 1.5 * U, sh + U); ctx.lineTo(x + 3.6 * U, sh - 3 * U); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - 2.4 * U, sh); ctx.lineTo(x + 2.4 * U, sh); ctx.lineTo(x + 2 * U, hip); ctx.lineTo(x - 2 * U, hip); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(x, head, 2.2 * U, 0, TAU); ctx.fill();
+    ctx.lineWidth = U; ctx.beginPath(); ctx.moveTo(x + 3.6 * U, sh - 3 * U); ctx.lineTo(tipX, tipY); ctx.stroke();
+    if (m.kind === 'lantern') {
+      const fl = 0.75 + 0.25 * Math.sin(state.t * 9 + i * 3.1);
+      glow(GLOW.ember, tipX, tipY, 28 * U, 0.5 * fl * m.a);
+      ctx.globalAlpha = m.a; ctx.fillStyle = P.ember; ctx.beginPath(); ctx.arc(tipX, tipY + 1.5 * U, 2.4 * U, 0, TAU); ctx.fill(); ctx.fillStyle = '#06051a';
+    } else {
+      ctx.globalAlpha = m.a; ctx.drawImage(S.miniFlag, tipX, tipY, S.miniW * 0.72, S.miniH * 0.72);
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+function drawGarland() {
+  const sway = Math.sin(state.t * 1.3) * 2 * U;
+  ctx.strokeStyle = 'rgba(220,210,235,0.42)'; ctx.lineWidth = 1; ctx.beginPath();
+  for (let x = -10; x <= W + 10; x += 10) { const y = garY(x) + sway * Math.sin(clamp(x / W, 0, 1) * Math.PI); if (x === -10) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+  ctx.stroke();
+  for (const f of S.garFlags) {
+    const y = garY(f.x) + sway * Math.sin(f.x / W * Math.PI);
+    ctx.save(); ctx.translate(f.x, y); ctx.rotate(Math.atan(garSlope(f.x)) + Math.sin(state.t * 2.2 + f.ph) * 0.12);
+    ctx.drawImage(S.miniFlag, -S.miniW / 2, 0, S.miniW, S.miniH);
+    ctx.restore();
+  }
+}
+function puff(x, y, r) { ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, TAU); }
+function drawItem(it) {
+  const x = it.x, y = it.y;
+  if (it.type === 'star') {
+    glow(GLOW.white, x, y, it.r * 3.8, 0.55);
+    ctx.fillStyle = P.paper; ctx.beginPath(); starPath(ctx, x, y, it.r, it.rot - Math.PI / 2); ctx.fill();
+    ctx.globalAlpha = 0.3 * (0.5 + 0.5 * Math.sin(it.ph * 4));
+    ctx.fillRect(x - it.r * 1.8, y - 0.5, it.r * 3.6, 1); ctx.fillRect(x - 0.5, y - it.r * 1.8, 1, it.r * 3.6);
+    ctx.globalAlpha = 1;
+  } else if (it.type === 'gold') {
+    const pul = 0.5 + 0.5 * Math.sin(it.ph * 6);
+    glow(GLOW.gold, x, y, it.r * (4.2 + pul), 0.8);
+    ctx.fillStyle = P.gold; ctx.beginPath(); starPath(ctx, x, y, it.r, it.rot - Math.PI / 2); ctx.fill();
+    ctx.strokeStyle = `rgba(243,195,79,${0.55 * (1 - pul)})`; ctx.lineWidth = 1.5 * U; ctx.beginPath(); ctx.arc(x, y, it.r * (1.2 + pul * 0.6), 0, TAU); ctx.stroke();
+  } else if (it.type === 'coin') {
+    const r = it.r;
+    glow(GLOW.gold, x, y, r * 4.6, 0.6 + 0.25 * Math.sin(it.ph * 5));
+    const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
+    g.addColorStop(0, '#ffe9a8'); g.addColorStop(0.55, P.gold); g.addColorStop(1, '#c08519');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(153,0,15,0.85)'; ctx.lineWidth = 1.3 * U; ctx.beginPath(); ctx.arc(x, y, r * 0.78, 0, TAU); ctx.stroke();
+    ctx.fillStyle = P.flagDeep; ctx.font = `700 ${Math.round(r * 0.6)}px ${FONT_B}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(it.m.y), x, y + r * 0.05);
+    ctx.save(); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.clip();
+    const gx = x - r * 1.6 + ((it.ph * 1.3) % 2.4) * r * 1.5;
+    ctx.globalAlpha = 0.45; ctx.fillStyle = '#ffffff'; ctx.beginPath();
+    ctx.moveTo(gx, y - r); ctx.lineTo(gx + r * 0.35, y - r); ctx.lineTo(gx - r * 0.25, y + r); ctx.lineTo(gx - r * 0.6, y + r); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  } else if (it.type === 'cloud') {
+    const { w, h } = it, flash = Math.sin(it.ph * 11 + it.x0) > 0.8;
+    if (flash) {
+      glow(GLOW.cool, x, y + h * 0.2, w * 1.7, 0.35);
+      ctx.fillStyle = P.gold; ctx.beginPath();
+      ctx.moveTo(x + w * 0.04, y + h * 0.28); ctx.lineTo(x - w * 0.12, y + h * 0.8); ctx.lineTo(x - w * 0.01, y + h * 0.76);
+      ctx.lineTo(x - w * 0.08, y + h * 1.16); ctx.lineTo(x + w * 0.13, y + h * 0.62); ctx.lineTo(x + w * 0.02, y + h * 0.64); ctx.lineTo(x + w * 0.1, y + h * 0.28);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.fillStyle = '#2b2843'; ctx.beginPath();
+    puff(x - w * 0.27, y + h * 0.12, h * 0.38); puff(x + w * 0.02, y - h * 0.1, h * 0.52); puff(x + w * 0.3, y + h * 0.1, h * 0.36);
+    ctx.rect(x - w * 0.27, y + h * 0.04, w * 0.57, h * 0.46); ctx.fill();
+    ctx.fillStyle = flash ? '#77739c' : '#4b4867'; ctx.beginPath();
+    puff(x - w * 0.27, y + h * 0.04, h * 0.33); puff(x + w * 0.02, y - h * 0.17, h * 0.46); puff(x + w * 0.29, y + h * 0.03, h * 0.31); ctx.fill();
+    ctx.fillStyle = 'rgba(255,248,238,0.09)'; ctx.beginPath(); puff(x - w * 0.05, y - h * 0.3, h * 0.22); ctx.fill();
+  } else if (it.type === 'fener') {
+    const r = it.r;
+    glow(GLOW.ember, x, y, r * 4.8, 0.75 + 0.2 * Math.sin(it.ph * 9));
+    ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(it.ph * 2.5) * 0.18);
+    ctx.strokeStyle = '#7a5a40'; ctx.lineWidth = 1.2 * U; ctx.beginPath(); ctx.moveTo(0, -r * 1.3); ctx.lineTo(0, -r * 0.9); ctx.stroke();
+    const g = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
+    g.addColorStop(0, '#fff1c2'); g.addColorStop(0.5, '#ffb04d'); g.addColorStop(1, '#e2531a');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, r * 0.8, r * 0.92, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(150,45,10,0.5)'; ctx.lineWidth = U;
+    for (const k of [0.34, 0.68]) { ctx.beginPath(); ctx.ellipse(0, 0, r * 0.8 * k, r * 0.92, 0, 0, TAU); ctx.stroke(); }
+    ctx.fillStyle = '#4a2410'; ctx.fillRect(-r * 0.44, -r * 1.0, r * 0.88, r * 0.2); ctx.fillRect(-r * 0.44, r * 0.82, r * 0.88, r * 0.2);
+    ctx.strokeStyle = '#e30a17'; ctx.beginPath(); ctx.moveTo(0, r * 1.02); ctx.lineTo(0, r * 1.4); ctx.stroke();
+    ctx.restore();
+  } else if (it.type === 'bayrak') {
+    const fw = 30 * U, fh = 20 * U;
+    glow(GLOW.white, x, y, it.r * 4.4, 0.45 + 0.2 * Math.sin(it.ph * 6));
+    ctx.fillStyle = '#d9d2e6'; ctx.fillRect(x - fw / 2 - 2 * U, y - fh / 2 - 3 * U, 1.8 * U, fh + 14 * U);
+    drawWavingFlag(S.flagSprite, x - fw / 2, y - fh / 2, fw, fh, 2.4 * U, 5, it.ph);
+  }
+}
+function drawPlayer() {
+  const R = 38 * U, sq = player.squash;
+  ctx.save();
+  ctx.translate(player.x, player.y); ctx.rotate(player.tilt); ctx.scale(1 + sq * 0.12, 1 - sq * 0.16);
+  glow(GLOW.white, 0, -R * 0.2, R * 3.4, 0.3 + player.flash * 0.5);
+  if (state.magnet > 0) glow(GLOW.ember, 0, -R * 0.3, R * 4.8, 0.38 + 0.16 * Math.sin(state.t * 8));
+  ctx.fillStyle = P.paper; ctx.beginPath(); crescentPath(ctx, 0, 0, R, 0, -R * 0.4, R * 0.87); ctx.fill();
+  ctx.restore();
+  if (state.shield) {
+    const a = state.t * 2.2, rr = R * 1.22;
+    ctx.save(); ctx.translate(player.x, player.y - R * 0.18); ctx.lineWidth = 3 * U; ctx.lineCap = 'round';
+    ctx.strokeStyle = P.flag; ctx.beginPath(); ctx.arc(0, 0, rr, a, a + Math.PI * 0.85); ctx.stroke();
+    ctx.strokeStyle = P.paper; ctx.beginPath(); ctx.arc(0, 0, rr, a + Math.PI, a + Math.PI * 1.85); ctx.stroke();
+    ctx.restore();
+  }
+}
+function drawParts(layer) {
+  ctx.globalCompositeOperation = 'lighter';
+  for (const p of state.parts) {
+    if (p.layer !== layer) continue;
+    let a = clamp(p.life / p.max, 0, 1);
+    if (p.tw) a *= 0.5 + 0.5 * Math.sin(state.t * 30 + p.x);
+    if (layer === 'bg') a *= 0.65;
+    ctx.globalAlpha = a; ctx.fillStyle = p.c;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.s * (0.55 + 0.45 * a), 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+}
+function drawTexts() {
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  for (const t of state.texts) {
+    ctx.globalAlpha = clamp(t.life / t.max * 1.4, 0, 1);
+    ctx.font = t.big ? `900 ${Math.round(30 * U)}px ${FONT_D}` : `800 ${Math.round(22 * U)}px ${FONT_D}`;
+    ctx.lineWidth = 4 * U; ctx.strokeStyle = 'rgba(11,13,36,0.75)'; ctx.strokeText(t.text, t.x, t.y);
+    ctx.fillStyle = t.c; ctx.fillText(t.text, t.x, t.y);
+  }
+  ctx.globalAlpha = 1;
+}
+function draw() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.save();
+  if (state.shake > 0 && !reduceMotion) ctx.translate((Math.random() - 0.5) * 10 * state.shake, (Math.random() - 0.5) * 8 * state.shake);
+  drawSky();
+  drawParts('bg');
+  drawEmblem();
+  ctx.fillStyle = S.horizon; ctx.fillRect(-20, S.farBase - 170 * U, W + 40, H - S.farBase + 190 * U);
+  fillPoly(S.far, '#141029');
+  drawBridge();
+  drawCity();
+  if (S.akT > 0.01) glow(GLOW.ember, S.akX, midY(S.akX) - 14 * U, 220 * U, 0.2 * S.akT);
+  fillPoly(S.mid, '#0e0b21');
+  drawAnitkabir();
+  drawPole();
+  fillPoly(S.near, '#08071a');
+  drawMarchers();
+  drawGarland();
+  for (const it of state.items) drawItem(it);
+  if (state.mode === 'play' || state.mode === 'over' || state.mode === 'start') drawPlayer();
+  drawParts('fg');
+  drawTexts();
+  ctx.restore();
+  if (state.hurt > 0 && !reduceMotion) { ctx.globalAlpha = state.hurt; ctx.fillStyle = S.vignette; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
+}
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
+  if (!state.paused) update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+/* ---------- celebration card ---------- */
+const QUOTES = {
+  hitabe: { text: '“Ey Türk gençliği! Birinci vazifen, Türk istiklâlini, Türk Cumhuriyeti’ni, ilelebet muhafaza ve müdafaa etmektir.”', src: 'GENÇLİĞE HİTABE · 1927' },
+  nemutlu: { text: '“Ne mutlu Türküm diyene!”', src: 'ONUNCU YIL NUTKU · 1933' },
+  azzaman: { text: '“Az zamanda çok ve büyük işler yaptık.”', src: 'ONUNCU YIL NUTKU · 1933' }
+};
+const FORMATS = {
+  post: { w: 1080, h: 1350, label: 100, emY: 262, G: 360, medR: 116, dateY: 588, dateSize: 236, dateMax: 940, msgY: [668, 734], msgSize: 64,
+    ribY: 770, ribH: 56, ribW: 540, ribFont: 38, qTop: 846, qBottom: 1052, qMax: 62, qMin: 30, ground: 1198, ak: 1, nameY: 1288, nameSize: 56, divider: 0 },
+  story: { w: 1080, h: 1920, label: 292, emY: 506, G: 430, medR: 150, dateY: 948, dateSize: 286, dateMax: 960, msgY: [1048, 1126], msgSize: 76,
+    ribY: 1168, ribH: 66, ribW: 640, ribFont: 44, qTop: 1272, qBottom: 1512, qMax: 76, qMin: 34, ground: 1852, ak: 1.22, nameY: 1642, nameSize: 68, divider: 1566 }
+};
+const THEMES = {
+  bayrak: {
+    bg(c, w, h) { const g = c.createRadialGradient(w / 2, h * 0.27, 40, w / 2, h * 0.42, h * 0.75); g.addColorStop(0, '#f2232e'); g.addColorStop(0.5, '#d20a17'); g.addColorStop(1, '#850010'); c.fillStyle = g; c.fillRect(0, 0, w, h); },
+    rays: 'rgba(255,255,255,0.05)', dateShadow: 'rgba(100,0,10,0.5)', line2: '#fff8ee',
+    rib: ['#f8d672', '#dea52a'], ribText: '#7a000c', ribTail: '#b4801b', sil: '#6a0410', lit: false
+  },
+  gece: {
+    bg(c, w, h) {
+      const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#090b22'); g.addColorStop(0.55, '#16102f'); g.addColorStop(1, '#3d0f24'); c.fillStyle = g; c.fillRect(0, 0, w, h);
+      const r = c.createRadialGradient(w / 2, h, 20, w / 2, h, h * 0.55); r.addColorStop(0, 'rgba(255,130,60,0.32)'); r.addColorStop(1, 'rgba(255,130,60,0)'); c.fillStyle = r; c.fillRect(0, 0, w, h);
+    },
+    rays: 'rgba(243,195,79,0.045)', dateShadow: '#e30a17', line2: '#f3c34f',
+    rib: ['#f2232e', '#b8000f'], ribText: '#fff8ee', ribTail: '#7a000c', sil: '#05060f', lit: true
+  }
+};
+const card = document.createElement('canvas');
+const cardImg = $('#cardImg'), nameInput = $('#nameInput'), statusEl = $('#status'), previewEl = $('#preview');
+const cardOpts = { format: store.get('cy-fmt', 'post'), theme: store.get('cy-theme', 'bayrak'), quote: store.get('cy-quote', 'hitabe') };
+if (!FORMATS[cardOpts.format]) cardOpts.format = 'post';
+if (!THEMES[cardOpts.theme]) cardOpts.theme = 'bayrak';
+if (!QUOTES[cardOpts.quote]) cardOpts.quote = 'hitabe';
+let cardPhoto = null, cardBlob = null, cardFile = null, renderSeq = 0, grain = null;
+nameInput.value = store.get('cy-name', 'Mehmet Akif Soyuslu');
+
+function setStatus(t) { statusEl.textContent = t; }
+function spaced(c, text, cx, y, sp) {
+  c.textAlign = 'center';
+  if ('letterSpacing' in c) { c.letterSpacing = sp + 'px'; c.fillText(text, cx + sp / 2, y); c.letterSpacing = '0px'; return c.measureText(text).width + sp * text.length; }
+  const ch = [...text], ws = ch.map(k => c.measureText(k).width), total = ws.reduce((a, b) => a + b, 0) + sp * (ch.length - 1);
+  let x = cx - total / 2; c.textAlign = 'left';
+  ch.forEach((k, i) => { c.fillText(k, x, y); x += ws[i] + sp; });
+  c.textAlign = 'center';
+  return total;
+}
+function measureSpaced(c, text, sp) { return c.measureText(text).width + sp * (text.length - 1); }
+function fitFont(c, text, weight, size, family, maxW, sp = 0) {
+  let s = size;
+  for (;;) { c.font = `${weight} ${s}px ${family}`; if (measureSpaced(c, text, sp) <= maxW || s <= 18) break; s -= 2; }
+  return s;
+}
+function wrap(c, text, maxW) {
+  const words = text.split(' '), lines = []; let line = '';
+  for (const w of words) { const t = line ? line + ' ' + w : w; if (c.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line);
+  return lines;
+}
+function cardStar(c, x, y, R, rot) { c.beginPath(); starPath(c, x, y, R, rot); c.fill(); }
+function cardGlow(c, x, y, r, rgba) { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rgba); g.addColorStop(1, rgba.replace(/[\d.]+\)$/, '0)')); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
+function cardBurst(c, x, y, r, rnd) {
+  const cols = ['#f3c34f', '#e30a17', '#fff8ee'], n = 34;
+  cardGlow(c, x, y, r * 0.5, 'rgba(255,230,170,0.28)');
+  c.lineCap = 'round';
+  for (let i = 0; i < n; i++) {
+    const a = i / n * TAU + rnd() * 0.08, r0 = r * (0.22 + rnd() * 0.1), r1 = r * (0.72 + rnd() * 0.28), col = cols[i % 3];
+    c.strokeStyle = col; c.globalAlpha = 0.75; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(x + Math.cos(a) * r0, y + Math.sin(a) * r0); c.lineTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1); c.stroke();
+    c.globalAlpha = 0.95; c.fillStyle = col; c.beginPath(); c.arc(x + Math.cos(a) * (r1 + 8), y + Math.sin(a) * (r1 + 8), 3.4, 0, TAU); c.fill();
+  }
+  c.globalAlpha = 1;
+}
+function cardFlag(c, fx, fy, fw, fh) {
+  c.save(); c.beginPath(); c.moveTo(fx, fy);
+  c.bezierCurveTo(fx + fw * 0.35, fy - fh * 0.14, fx + fw * 0.65, fy + fh * 0.14, fx + fw, fy);
+  c.lineTo(fx + fw, fy + fh);
+  c.bezierCurveTo(fx + fw * 0.65, fy + fh * 1.14, fx + fw * 0.35, fy + fh * 0.86, fx, fy + fh);
+  c.closePath(); c.fillStyle = '#e30a17'; c.fill();
+  c.lineWidth = fh * 0.04; c.strokeStyle = 'rgba(255,248,238,0.9)'; c.stroke();
+  c.fillStyle = '#fff8ee'; flagEmblem(c, fx, fy + fh / 2, fh);
+  c.restore();
+}
+function cardAnitkabir(c, cx, ground, s, T, Wc, Hc, rnd) {
+  const hy = x => ground + 46 * s * Math.pow((x - cx) / (Wc / 2), 2);
+  c.fillStyle = T.sil; c.beginPath(); c.moveTo(0, hy(0));
+  for (let x = 0; x <= Wc; x += 20) c.lineTo(x, hy(x));
+  c.lineTo(Wc, Hc); c.lineTo(0, Hc); c.closePath(); c.fill();
+  const pTop = ground - 46 * s, colH = 52 * s, colTop = pTop - colH;
+  if (T.lit) { cardGlow(c, cx, colTop + colH / 2, 420 * s, 'rgba(255,170,80,0.42)'); c.fillStyle = '#ffc66a'; c.fillRect(cx - 196 * s, colTop + 2 * s, 392 * s, colH - 2 * s); }
+  c.fillStyle = T.sil;
+  c.fillRect(cx - 260 * s, ground - 8 * s, 520 * s, 36 * s);
+  c.fillRect(cx - 246 * s, ground - 16 * s, 492 * s, 8 * s);
+  c.fillRect(cx - 232 * s, ground - 24 * s, 464 * s, 8 * s);
+  c.fillRect(cx - 214 * s, pTop, 428 * s, 22 * s);
+  const n = 12, colW = 13 * s, span = 396 * s;
+  for (let i = 0; i < n; i++) c.fillRect(cx - span / 2 + i * (span - colW) / (n - 1), colTop, colW, colH);
+  c.fillRect(cx - 212 * s, colTop - 14 * s, 424 * s, 14 * s);
+  c.fillRect(cx - 200 * s, colTop - 26 * s, 400 * s, 12 * s);
+  const px = cx - 362 * s, base = hy(px) + 4, top = ground - 162 * s;
+  c.fillRect(px - 2.5 * s, top, 5 * s, base - top);
+  c.beginPath(); c.arc(px, top - 3 * s, 6 * s, 0, TAU); c.fill();
+  cardFlag(c, px + 2.5 * s, top + 4 * s, 96 * s, 64 * s);
+  if (T.lit) {
+    for (let x = 30; x < Wc - 20; x += 28) {
+      if (Math.abs(x - cx) < 280 * s || Math.abs(x - px) < 18 * s) continue;
+      const y = hy(x) - 12 * s - rnd() * 6;
+      cardGlow(c, x, y, 16 * s, 'rgba(255,173,77,0.55)');
+      c.fillStyle = '#ffad4d'; c.beginPath(); c.arc(x, y, 3.4 * s, 0, TAU); c.fill();
+      c.fillStyle = T.sil; c.fillRect(x - 0.8 * s, y + 3 * s, 1.6 * s, 12 * s);
+    }
+  }
+}
+function cardMedal(c, img, cx, cy, r) {
+  c.save();
+  c.fillStyle = '#f3c34f'; c.beginPath(); c.arc(cx, cy, r + 16, 0, TAU); c.fill();
+  c.fillStyle = '#fff8ee'; c.beginPath(); c.arc(cx, cy, r + 7, 0, TAU); c.fill();
+  c.beginPath(); c.arc(cx, cy, r, 0, TAU); c.clip();
+  const s = Math.max(2 * r / img.width, 2 * r / img.height), w = img.width * s, h = img.height * s;
+  const y0 = h > 2 * r ? cy - r - (h - 2 * r) * 0.22 : cy - h / 2;
+  c.drawImage(img, cx - w / 2, y0, w, h);
+  c.restore();
+  c.save(); c.fillStyle = '#f3c34f';
+  for (let i = 0; i < 24; i++) { const a = i / 24 * TAU; c.beginPath(); c.arc(cx + Math.cos(a) * (r + 11.5), cy + Math.sin(a) * (r + 11.5), 1.8, 0, TAU); c.fill(); }
+  c.restore();
+}
+function getGrain() {
+  if (grain) return grain;
+  const g = document.createElement('canvas'); g.width = g.height = 180;
+  const x = g.getContext('2d'), d = x.createImageData(180, 180), r = mulberry32(7);
+  for (let i = 0; i < d.data.length; i += 4) { const v = r() < 0.5 ? 0 : 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = Math.round(r() * 26); }
+  x.putImageData(d, 0, 0); grain = g;
+  return g;
+}
+function drawCard(c, o) {
+  const F = FORMATS[o.format], T = THEMES[o.theme], Q = QUOTES[o.quote], Wc = F.w, Hc = F.h, cx = Wc / 2, rnd = mulberry32(1029);
+  c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over'; c.shadowColor = 'transparent'; c.textBaseline = 'alphabetic';
+  T.bg(c, Wc, Hc);
+  if (T.lit) { c.fillStyle = '#fff8ee'; for (let i = 0; i < 160; i++) { c.globalAlpha = 0.25 + rnd() * 0.6; const s = 1 + rnd() * 2.2; c.fillRect(rnd() * Wc, rnd() * Hc * 0.82, s, s); } c.globalAlpha = 1; }
+  c.save(); c.translate(cx, F.emY); c.fillStyle = T.rays;
+  for (let i = 0; i < 44; i += 2) { const a0 = i / 44 * TAU, a1 = (i + 1) / 44 * TAU; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, Hc * 1.3, a0, a1); c.closePath(); c.fill(); }
+  c.restore();
+  if (T.lit) {
+    if (o.format === 'story') { cardBurst(c, 160, F.emY - 60, 116, rnd); cardBurst(c, 915, F.emY - 90, 96, rnd); cardBurst(c, 890, F.emY + 120, 64, rnd); }
+    else { cardBurst(c, 150, F.emY - 30, 100, rnd); cardBurst(c, 920, F.emY - 112, 86, rnd); }
+  }
+  // header
+  c.fillStyle = 'rgba(255,248,238,0.92)'; c.font = `700 ${o.format === 'story' ? 30 : 26}px ${FONT_B}`;
+  const lw = spaced(c, 'TÜRKİYE CUMHURİYETİ', cx, F.label, 9);
+  c.fillStyle = '#f3c34f'; cardStar(c, cx - lw / 2 - 30, F.label - 10, 9, -Math.PI / 2); cardStar(c, cx + lw / 2 + 30, F.label - 10, 9, -Math.PI / 2);
+  // emblem / photo medal
+  if (o.photo) { c.save(); c.shadowColor = 'rgba(40,0,6,0.45)'; c.shadowBlur = 24; c.shadowOffsetY = 8; cardMedal(c, o.photo, cx, F.emY, F.medR); c.restore(); }
+  else {
+    if (T.lit) cardGlow(c, cx, F.emY, F.G * 0.75, 'rgba(255,248,238,0.16)');
+    c.save(); c.shadowColor = T.lit ? 'rgba(227,10,23,0.65)' : 'rgba(70,0,8,0.4)'; c.shadowOffsetY = T.lit ? 0 : 7; c.shadowBlur = T.lit ? 28 : 0;
+    c.fillStyle = '#fff8ee'; flagEmblem(c, cx - 0.7979 * F.G, F.emY, F.G);
+    c.restore();
+  }
+  // 29 EKİM
+  c.save(); c.fillStyle = '#fff8ee'; c.shadowColor = T.dateShadow; c.shadowOffsetY = T.lit ? 10 : 8;
+  fitFont(c, '29 EKİM', 900, F.dateSize, FONT_D, F.dateMax); c.textAlign = 'center'; c.fillText('29 EKİM', cx, F.dateY);
+  c.restore();
+  c.fillStyle = '#fff8ee'; fitFont(c, 'CUMHURİYET BAYRAMIMIZ', 800, F.msgSize, FONT_D, 900, 3); spaced(c, 'CUMHURİYET BAYRAMIMIZ', cx, F.msgY[0], 3);
+  c.fillStyle = T.line2; fitFont(c, 'KUTLU OLSUN', 800, F.msgSize, FONT_D, 900, 3); spaced(c, 'KUTLU OLSUN', cx, F.msgY[1], 3);
+  // ribbon with folded tails
+  const rt = F.ribY, rh = F.ribH, l = cx - F.ribW / 2, r = cx + F.ribW / 2, drop = rh * 0.22, tail = rh * 0.85;
+  c.fillStyle = T.ribTail;
+  c.beginPath(); c.moveTo(l + 18, rt + drop); c.lineTo(l - tail, rt + drop); c.lineTo(l - tail + rh * 0.32, rt + drop + rh / 2); c.lineTo(l - tail, rt + drop + rh); c.lineTo(l + 18, rt + drop + rh); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(r - 18, rt + drop); c.lineTo(r + tail, rt + drop); c.lineTo(r + tail - rh * 0.32, rt + drop + rh / 2); c.lineTo(r + tail, rt + drop + rh); c.lineTo(r - 18, rt + drop + rh); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(0,0,0,0.28)';
+  c.beginPath(); c.moveTo(l, rt + rh); c.lineTo(l + 18, rt + rh + drop); c.lineTo(l + 18, rt + rh); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(r, rt + rh); c.lineTo(r - 18, rt + rh + drop); c.lineTo(r - 18, rt + rh); c.closePath(); c.fill();
+  const rg = c.createLinearGradient(0, rt, 0, rt + rh); rg.addColorStop(0, T.rib[0]); rg.addColorStop(1, T.rib[1]);
+  c.fillStyle = rg; c.fillRect(l, rt, F.ribW, rh);
+  c.fillStyle = T.ribText; c.font = `800 ${F.ribFont}px ${FONT_D}`;
+  spaced(c, '103. YIL  ·  1923 – 2026', cx, rt + rh / 2 + F.ribFont * 0.35, 3);
+  // quote, sized to its area
+  const attrH = o.format === 'story' ? 76 : 66, areaH = F.qBottom - F.qTop, maxW = o.format === 'story' ? 880 : 840;
+  let qs = F.qMax, lines = [], lh = 0;
+  for (; qs >= F.qMin; qs -= 2) { c.font = `italic 500 ${qs}px ${FONT_Q}`; lines = wrap(c, Q.text, maxW); lh = Math.round(qs * 1.26); if (lines.length <= 4 && lines.length * lh + attrH <= areaH) break; }
+  const blockH = lines.length * lh + attrH, y0 = F.qTop + (areaH - blockH) / 2 + qs * 0.85;
+  c.fillStyle = 'rgba(255,248,238,0.96)'; c.textAlign = 'center';
+  lines.forEach((ln, i) => c.fillText(ln, cx, y0 + i * lh));
+  const ay = y0 + (lines.length - 1) * lh + qs * 0.4 + 40;
+  c.fillStyle = '#f3c34f'; c.font = `700 ${o.format === 'story' ? 24 : 21}px ${FONT_B}`; spaced(c, 'MUSTAFA KEMAL ATATÜRK', cx, ay, 6);
+  c.fillStyle = 'rgba(255,248,238,0.66)'; c.font = `500 ${o.format === 'story' ? 18 : 16}px ${FONT_B}`; spaced(c, Q.src, cx, ay + (o.format === 'story' ? 30 : 26), 3);
+  // Anıtkabir on the hill
+  cardAnitkabir(c, cx, F.ground, F.ak, T, Wc, Hc, rnd);
+  // name
+  if (o.name) {
+    if (F.divider) {
+      c.strokeStyle = 'rgba(243,195,79,0.8)'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(cx - 170, F.divider); c.lineTo(cx - 26, F.divider); c.moveTo(cx + 26, F.divider); c.lineTo(cx + 170, F.divider); c.stroke();
+      c.fillStyle = '#f3c34f'; cardStar(c, cx, F.divider, 11, -Math.PI / 2);
+    }
+    c.fillStyle = '#fff8ee'; fitFont(c, o.name, 'italic 600', F.nameSize, FONT_Q, 860); c.textAlign = 'center'; c.fillText(o.name, cx, F.nameY);
+  }
+  // paper grain
+  c.save(); c.globalAlpha = 0.5; c.fillStyle = c.createPattern(getGrain(), 'repeat'); c.fillRect(0, 0, Wc, Hc); c.restore();
+  // gold double frame with corner diamonds
+  c.save();
+  c.strokeStyle = 'rgba(243,195,79,0.78)'; c.lineWidth = 3; c.strokeRect(28, 28, Wc - 56, Hc - 56);
+  c.strokeStyle = 'rgba(243,195,79,0.4)'; c.lineWidth = 1.5; c.strokeRect(40, 40, Wc - 80, Hc - 80);
+  c.fillStyle = '#f3c34f';
+  [[28, 28], [Wc - 28, 28], [28, Hc - 28], [Wc - 28, Hc - 28]].forEach(([x, y]) => {
+    c.beginPath(); c.moveTo(x, y - 11); c.lineTo(x + 11, y); c.lineTo(x, y + 11); c.lineTo(x - 11, y); c.closePath(); c.fill();
+  });
+  c.restore();
+}
+function syncCardControls() {
+  document.querySelectorAll('#cardControls [data-opt]').forEach(b => b.setAttribute('aria-pressed', String(cardOpts[b.dataset.opt] === b.dataset.v)));
+  const F = FORMATS[cardOpts.format];
+  previewEl.style.setProperty('--ar', `${F.w} / ${F.h}`);
+  previewEl.style.setProperty('--hr', String(F.h / F.w));
+}
+function fileName() { return `29-ekim-103-yil-${cardOpts.format === 'story' ? 'hikaye' : 'gonderi'}.png`; }
+async function renderCard() {
+  const seq = ++renderSeq;
+  await fontsReady;
+  if (seq !== renderSeq) return;
+  const F = FORMATS[cardOpts.format];
+  if (card.width !== F.w) card.width = F.w;
+  if (card.height !== F.h) card.height = F.h;
+  drawCard(card.getContext('2d'), { ...cardOpts, name: nameInput.value.trim(), photo: cardPhoto });
+  try { cardImg.src = card.toDataURL('image/png'); cardImg.hidden = false; $('#previewWait').hidden = true; } catch (e) {}
+  cardBlob = null; cardFile = null;
+  card.toBlob(b => {
+    if (seq !== renderSeq || !b) return;
+    cardBlob = b;
+    try { cardFile = new File([b], fileName(), { type: 'image/png' }); } catch (e) { cardFile = null; }
+  }, 'image/png');
+}
+$('#cardControls').addEventListener('click', e => {
+  const b = e.target.closest('[data-opt]'); if (!b) return;
+  const k = b.dataset.opt; cardOpts[k] = b.dataset.v;
+  store.set({ format: 'cy-fmt', theme: 'cy-theme', quote: 'cy-quote' }[k], b.dataset.v);
+  syncCardControls(); setStatus(''); renderCard();
+});
+let nameTimer = 0;
+nameInput.addEventListener('input', () => { store.set('cy-name', nameInput.value); clearTimeout(nameTimer); nameTimer = setTimeout(renderCard, 220); });
+$('#photoInput').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const img = new Image();
+  img.onload = () => { cardPhoto = img; $('#removePhotoBtn').hidden = false; setStatus(''); renderCard(); };
+  img.onerror = () => setStatus('Bu dosya açılamadı. JPG veya PNG bir fotoğraf seç.');
+  img.src = URL.createObjectURL(f);
+  e.target.value = '';
+});
+$('#removePhotoBtn').addEventListener('click', () => { cardPhoto = null; $('#removePhotoBtn').hidden = true; renderCard(); });
+function downloadAnchor() {
+  try {
+    const url = URL.createObjectURL(cardBlob), a = document.createElement('a');
+    a.href = url; a.download = fileName(); document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch (e) {}
+  setStatus('İndirme başlamadıysa karta basılı tutup “Fotoğraflara kaydet”i seç.');
+}
+function webShare() {
+  if (cardFile && navigator.canShare && navigator.canShare({ files: [cardFile] })) {
+    navigator.share({ files: [cardFile], title: '29 Ekim Cumhuriyet Bayramı', text: SHARE_TEXT })
+      .then(() => setStatus('Paylaşıldı. Cumhuriyet Bayramın kutlu olsun!'))
+      .catch(err => { if (err && err.name === 'AbortError') return; downloadAnchor(); });
+    return;
+  }
+  downloadAnchor();
+}
+$('#shareBtn').addEventListener('click', () => {
+  if (!cardBlob) { setStatus('Kart hazırlanıyor, bir saniye sonra tekrar dokun.'); renderCard(); return; }
+  if (downloadsNs) {
+    downloadsNs.save({ filename: fileName(), data: cardBlob })
+      .then(() => setStatus('Kart kaydedildi. Şimdi istediğin yerde paylaşabilirsin.'))
+      .catch(err => {
+        const code = err && err.code;
+        if (code === 'declined') { setStatus(''); return; }
+        if (code === 'rate_limited') { setStatus('Biraz bekleyip tekrar dene.'); return; }
+        webShare();
+      });
+    return;
+  }
+  webShare();
+});
+
+/* ---------- test hook (only with #test in the address) ---------- */
+if (location.hash === '#test') {
+  window.__cy = { state, S, startGame, goHome, gameOver, win, openCard, renderCard, cardOpts, syncCardControls,
+    setScore(n) { state.score = n; updateHud(); }, collect(list) { list.forEach(i => state.got.add(i)); } };
+}
+
+/* ---------- boot ---------- */
+updateBestLine();
+resize();
+updateHud();
+requestAnimationFrame(t => { last = t; loop(t); });
+})();
+</script>
+</body>
+</html>
