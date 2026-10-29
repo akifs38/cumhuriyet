@@ -6,6 +6,7 @@
 <meta property="og:title" content="Cumhuriyet Yolu · 29 Ekim 103. Yıl">
 <meta property="og:description" content="1923'ten 2026'ya yıldızları topla, şehri büyüt, 29 Ekim kutlama kartını paylaş.">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}[hidden]{display:none!important}</style>
+<script data-goatcounter="https://akifs38.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <title>Cumhuriyet Yolu</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="29 Ekim Cumhuriyet Bayramı'nın 103. yılı için mobil oyun: 1923'ten 2026'ya yıldızları topla, şehri büyüt, kutlama kartını paylaş.">
@@ -369,6 +370,8 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 };
 const vibrate = p => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
+// Visitor events for GoatCounter (only on the GitHub Pages build; silently does nothing elsewhere or when blocked).
+const track = (path, title) => { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path, title: title || path, event: true }); } catch (e) {} };
 
 const START_YEAR = 1923, GOAL = 103, END_YEAR = START_YEAR + GOAL; // 2026
 const MILESTONES = [
@@ -752,6 +755,7 @@ function updateBestLine() {
 }
 function startGame() {
   audio.init();
+  track('oyun-basladi', 'Oyun başladı');
   Object.assign(state, { mode: 'play', paused: false, score: 0, lives: 3, items: [], texts: [], spawnT: 0.8, msIdx: 1, msCool: 2.6, coinLive: false,
     shake: 0, hurt: 0, streak: 0, bestStreak: 0, caught: 0, got: new Set(), magnet: 0, shield: false, hintT: 4.5, moved: 0, timeScale: 1, emblem: null });
   state.parts = state.parts.filter(p => p.layer === 'bg');
@@ -829,6 +833,7 @@ function gameOver() {
 }
 function win() {
   state.mode = 'win'; state.winT = 0; state.emblemFlashed = false; saveBest(END_YEAR);
+  track('oyun-tamamlandi', '2026\'ya ulaştı');
   hideHint(); toast.hidden = true; hud.hidden = true;
   state.items.forEach(it => burst(it.x, it.y, [P.gold, P.paper], 8, 120 * U));
   state.items = []; state.magnet = 0; updatePowers();
@@ -838,6 +843,7 @@ function win() {
 }
 function openCard(fromStart) {
   $('#replayBtn').textContent = fromStart === true ? 'Oyuna başla' : 'Yeniden oyna';
+  track('kart-acildi', 'Kutlama kartı açıldı');
   state.mode = 'card'; state.paused = false; showSheet('card'); hud.hidden = true; toast.hidden = true; hideHint();
   syncCardControls(); renderCard();
   sheets.card.scrollTop = 0;
@@ -1564,12 +1570,13 @@ function downloadAnchor() {
     a.href = url; a.download = fileName(); document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   } catch (e) {}
+  track('kart-indirildi', 'Kart indirildi');
   setStatus('İndirme başlamadıysa karta basılı tutup “Fotoğraflara kaydet”i seç.');
 }
 function webShare() {
   if (cardFile && navigator.canShare && navigator.canShare({ files: [cardFile] })) {
     navigator.share({ files: [cardFile], title: '29 Ekim Cumhuriyet Bayramı', text: SHARE_TEXT })
-      .then(() => setStatus('Paylaşıldı. Cumhuriyet Bayramın kutlu olsun!'))
+      .then(() => { track('kart-paylasildi', 'Kart paylaşıldı'); setStatus('Paylaşıldı. Cumhuriyet Bayramın kutlu olsun!'); })
       .catch(err => { if (err && err.name === 'AbortError') return; downloadAnchor(); });
     return;
   }
